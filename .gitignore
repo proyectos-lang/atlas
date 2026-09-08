@@ -18,10 +18,13 @@ datos/*.xlsx
 datos/*.xls
 datos/*.csv
 
-# Capturas y scripts de verificación puntual
+# Capturas y scripts de verificación puntual.
+# OJO: no usar *.mjs — excluiría next.config.mjs y postcss.config.mjs,
+# y sin este último Tailwind no compila y el sitio sale sin estilos.
 *.png
-*.mjs
 prueba-*.ts
+verif-*.mjs
+diag-*.mjs
 
 # Sistema y cobertura
 .DS_Store
