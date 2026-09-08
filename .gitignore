@@ -1,0 +1,28 @@
+# Dependencias y compilación
+node_modules/
+.next/
+out/
+build/
+*.tsbuildinfo
+next-env.d.ts
+
+# Secretos: NUNCA subir. Contienen la service role key de Supabase
+# y la clave de Anthropic.
+.env
+.env.local
+.env*.local
+
+# Datos de estudiantes. El repositorio es público: el archivo de origen
+# se comparte por fuera, no aquí. Ver README > Puesta en marcha.
+datos/*.xlsx
+datos/*.xls
+datos/*.csv
+
+# Capturas y scripts de verificación puntual
+*.png
+*.mjs
+prueba-*.ts
+
+# Sistema y cobertura
+.DS_Store
+coverage/
