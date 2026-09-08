@@ -55,10 +55,10 @@ export function Marco({
 
   return (
     <div className="min-h-screen bg-superficie-pagina">
-      {/* El checkbox controla el panel sin necesidad de estado en cliente. */}
-      <input type="checkbox" id="abrir-menu" className="peer sr-only" />
-
-      <header className="flex h-banda items-center justify-between gap-3 bg-institucional px-4 lg:px-6">
+      {/* Cabecera fija: si sube con el scroll, la barra lateral —que es
+          sticky a 89 px— queda flotando y aparece una franja del fondo
+          entre ambas. Fijando la cabecera el marco se mantiene unido. */}
+      <header className="sticky top-0 z-40 flex h-banda items-center justify-between gap-3 bg-institucional px-4 lg:px-6">
         <div className="flex min-w-0 items-center gap-3">
           <label
             htmlFor="abrir-menu"
@@ -88,6 +88,12 @@ export function Marco({
       </header>
 
       <div className="flex">
+        {/* El checkbox abre el panel sin estado en cliente. Debe ser HERMANO
+            del velo y del <aside>: `peer-checked:` sólo alcanza a hermanos
+            posteriores, y estando fuera de este contenedor no se aplicaba
+            y el panel móvil nunca llegaba a abrirse. */}
+        <input type="checkbox" id="abrir-menu" className="peer sr-only" />
+
         {/* Velo: cierra el panel al tocar fuera. */}
         <label
           htmlFor="abrir-menu"
@@ -95,8 +101,10 @@ export function Marco({
           aria-hidden
         />
 
+        {/* Alto exacto del hueco bajo la cabecera; el contenido que no
+            quepa (los siete filtros) se desplaza dentro del propio panel. */}
         <aside
-          className="fixed left-0 top-banda z-30 h-[calc(100vh-89px)] w-lateral shrink-0
+          className="fixed left-0 top-banda z-30 h-[calc(100dvh-89px)] w-lateral shrink-0
                      -translate-x-full overflow-y-auto bg-institucional px-3 py-4
                      transition-transform peer-checked:translate-x-0
                      lg:sticky lg:translate-x-0"
