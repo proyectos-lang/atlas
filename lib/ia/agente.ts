@@ -44,7 +44,11 @@ Reglas que no puedes romper:
 - Si un indicador viene marcado como DATO SIMULADO, no fundamentas la recomendación en él:
   usa otro sub-indicador de la misma competencia que sí tenga datos reales, y si no lo hay,
   apóyate en el índice general sin citar el sub-indicador simulado.
-- El nivel meta es siempre el nivel inmediatamente superior al actual.`
+- El nivel meta es siempre el nivel inmediatamente superior al actual.
+- Si se te entrega el PERFIL DE EGRESO del programa, la accion que propongas debe servir a
+  alguna de las capacidades que ese perfil declara, y la justificacion la menciona en los
+  terminos del propio perfil. El perfil orienta el QUE se busca formar; los indicadores dicen
+  DONDE esta la carencia. No cites el perfil de egreso como si fuera un dato medido.`
 
 export interface ContextoEstudiante {
   usuarioId: number
@@ -54,6 +58,10 @@ export interface ContextoEstudiante {
   indices: Record<string, number>
   subIndicadores: Record<string, number>
   actividades: { nombre: string; tipo: string; competencia: string }[]
+  /** Perfil de egreso del programa, si el administrador lo configuro y esta activo. */
+  perfilEgreso?: string
+  /** Notas de analisis que acompanan al perfil de egreso. */
+  notasEgreso?: string
 }
 
 /** Competencias bajo Alto, ordenadas por brecha descendente. */
@@ -109,6 +117,29 @@ function bloqueCompetencia(
     actividades.length ? '    Actividades del curso en esta competencia:' : '',
     ...actividades,
   ].filter(Boolean).join('\n')
+}
+
+/**
+ * Bloque de perfil de egreso para el prompt. Vacio si el programa no lo
+ * tiene configurado: el agente sigue trabajando solo con los indicadores.
+ *
+ * Va delimitado y rotulado como documento curricular para que el modelo no
+ * lo confunda con una medicion ni cite de el cifras que no existen.
+ */
+function bloqueEgreso(ctx: ContextoEstudiante): string {
+  if (!ctx.perfilEgreso) return ''
+  const lineas = [
+    'PERFIL DE EGRESO DEL PROGRAMA (documento curricular, no es un dato medido):',
+    '--- inicio del perfil de egreso ---',
+    ctx.perfilEgreso.trim(),
+    '--- fin del perfil de egreso ---',
+    ctx.notasEgreso ? `Notas para el analisis: ${ctx.notasEgreso.trim()}` : '',
+  ].filter(Boolean)
+
+  // El salto final separa el bloque de lo que viene después. Va fuera del
+  // filter: una cadena vacía dentro se descartaría y el perfil quedaría
+  // pegado a la línea del estudiante.
+  return `${lineas.join('\n')}\n\n`
 }
 
 function nivelMetaDe(valor: number): string {
@@ -202,6 +233,35 @@ export async function generarRecomendaciones(
     db.from('actividades').select('curso_id, nombre, tipo, competencia'),
   ])
 
+  // Perfil de egreso por programa, indexado por curso: el contexto del
+  // agente es el estudiante, y el estudiante llega con su curso.
+  // Si la tabla no existe todavia (migracion 06 sin aplicar) se sigue sin
+  // perfil: es contexto adicional, nunca un requisito para generar.
+  const egresoPorCurso = new Map<number, { texto: string; notas: string | null }>()
+  {
+    const { data: cursosUniv } = await db.from('cursos').select('id, universidad_id')
+    const { data: egresos, error: eEgreso } = await db
+      .from('perfiles_egreso')
+      .select('universidad_id, perfil_egreso, notas, activo')
+      .eq('activo', true)
+
+    if (!eEgreso) {
+      const porUniv = new Map(
+        (egresos ?? []).map((e) => [
+          Number(e.universidad_id),
+          {
+            texto: String(e.perfil_egreso),
+            notas: e.notas === null ? null : String(e.notas),
+          },
+        ])
+      )
+      for (const c of cursosUniv ?? []) {
+        const e = porUniv.get(Number(c.universidad_id))
+        if (e) egresoPorCurso.set(Number(c.id), e)
+      }
+    }
+  }
+
   const nombreCurso = new Map((cursos ?? []).map((c) => [Number(c.id), String(c.nombre)]))
   const datosUsuario = new Map((usuarios ?? []).map((u) => [Number(u.id), u]))
   const subPorUsuario = new Map(
@@ -241,6 +301,8 @@ export async function generarRecomendaciones(
           nombre: String(a.nombre), tipo: String(a.tipo),
           competencia: String(a.competencia),
         })),
+      perfilEgreso: egresoPorCurso.get(cid)?.texto,
+      notasEgreso: egresoPorCurso.get(cid)?.notas ?? undefined,
     }
   })
 
@@ -253,6 +315,7 @@ export async function generarRecomendaciones(
     if (brechas.length === 0) continue
 
     const prompt = [
+      bloqueEgreso(ctx),
       `Estudiante ${ctx.codigo} del curso ${ctx.cursoNombre}.`,
       `Competencia Transversal Global: ${ctx.indices.CTG.toFixed(1).replace('.', ',')} %`,
       '',
@@ -318,6 +381,7 @@ export async function generarRecomendaciones(
         )
 
         const prompt = [
+          bloqueEgreso(referencia),
           `Curso ${referencia.cursoNombre}, ${alumnos.length} estudiantes.`,
           `${bajos.length} de ${alumnos.length} (${Math.round(proporcion * 100)} %) están por debajo del nivel Alto en ${competencia}.`,
           '',

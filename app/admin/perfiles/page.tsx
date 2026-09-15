@@ -1,5 +1,6 @@
 import { exigirRol } from '@/lib/auth/sesion'
 import { Marco } from '@/componentes/marco'
+import { SubNavAdmin } from '@/componentes/sub-nav-admin'
 import { clienteServidor } from '@/lib/supabase/servidor'
 import { cursos, estudiantes, universidades } from '@/lib/kpi/consultas'
 import { FormularioPerfil } from './formulario'
@@ -44,7 +45,7 @@ export default async function PaginaPerfiles() {
   }
 
   return (
-    <Marco perfil={perfil} titulo="Administración de perfiles">
+    <Marco perfil={perfil} titulo="Administración de perfiles" lateral={<SubNavAdmin />}>
       <div className="grid gap-6 lg:grid-cols-[1fr_1.2fr]">
         <section className="rounded-tarjeta border border-superficie-borde bg-white p-5">
           <h2 className="text-lg font-semibold text-institucional">Crear perfil</h2>
