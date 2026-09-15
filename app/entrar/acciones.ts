@@ -4,7 +4,7 @@ import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { clienteAuth } from '@/lib/auth/sesion'
 import { clienteServidor } from '@/lib/supabase/servidor'
-import { INICIO_POR_ROL, type Rol } from '@/lib/auth/alcance'
+import { puedeVer, type Rol } from '@/lib/auth/alcance'
 
 export interface EstadoEntrada {
   error?: string
@@ -50,7 +50,19 @@ export async function entrar(
   }
 
   revalidatePath('/', 'layout')
-  redirect(INICIO_POR_ROL[perfil.rol as Rol])
+
+  // El middleware guarda en `siguiente` la ruta que se intentó abrir sin
+  // sesión. Se respeta si el rol puede verla; si no, al panel de inicio.
+  // Sólo rutas internas: un valor externo sería un redirect abierto.
+  const siguiente = String(formulario.get('siguiente') ?? '')
+  const destino =
+    siguiente.startsWith('/') &&
+    !siguiente.startsWith('//') &&
+    puedeVer(perfil.rol as Rol, siguiente)
+      ? siguiente
+      : '/inicio'
+
+  redirect(destino)
 }
 
 export async function salir() {

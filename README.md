@@ -33,6 +33,7 @@ Ejecutar **en orden** desde el SQL Editor de Supabase:
 | 3 | `supabase/migraciones/02_rubrica_parametros.sql` | rúbrica (3 tablas), parámetros, catálogo |
 | 4 | `supabase/migraciones/03_recomendaciones_perfiles.sql` | recomendaciones y perfiles |
 | 5 | `supabase/migraciones/04_seed_rubrica_parametros.sql` | semillas deterministas |
+| 6 | `supabase/migraciones/06_perfil_egreso.sql` | perfil de egreso por programa |
 
 > La migración 04 depende de que `usuarios` y `semanas` ya tengan datos.
 > Ejecutarla **después** de `npm run seed`.
@@ -82,6 +83,38 @@ Anclajes de la semilla de rúbrica (1296 filas):
 | NIA | 898 | 1296 | 69,29 % |
 | UEA | 616 | 864 | 71,30 % |
 
+## Perfil de egreso
+
+Cada programa —cada fila de `universidades`, que ya es un par universidad +
+programa— puede tener un perfil de egreso: el texto del documento curricular
+que declara qué debe saber hacer quien termina. Se configura en
+**Administración → Perfil de egreso**, sólo el administrador.
+
+No es un dato más del tablero: entra en el contexto del agente de IA, que lo
+recibe rotulado como documento curricular junto a los indicadores del
+estudiante. La regla que se le impone es que la acción propuesta sirva a
+alguna capacidad que el perfil declara, y que la justificación la nombre en
+los términos del propio perfil. Los indicadores dicen dónde está la carencia;
+el perfil, hacia qué se la corrige.
+
+Un programa sin perfil de egreso no rompe nada: el agente sigue trabajando
+sólo con los indicadores, como hasta ahora. Desactivarlo (sin borrarlo) lo
+saca del contexto.
+
+## Acerca de los indicadores
+
+`/acerca-de`, accesible a todos los roles: cómo se calcula cada indicador, en
+dos niveles. La prosa dice qué mide y cómo leerlo; «Ver el cálculo» despliega
+la fórmula, el origen del dato y el parámetro configurable. Incluye las cuatro
+reglas, la excepción de CPP, los criterios del embudo y los valores de
+referencia.
+
+El texto vive en `lib/kpi/metodologia.ts` y es **documentación, no motor**: si
+se cambia una fórmula en `05_vistas_kpi.sql` hay que cambiarla también ahí.
+`pruebas/metodologia.test.ts` comprueba que no falte ningún indicador ni se
+documenten códigos inexistentes, pero no puede verificar que la prosa describa
+bien la fórmula.
+
 ## Motor de indicadores
 
 El cálculo pesado vive en funciones de Postgres (`supabase/migraciones/05_vistas_kpi.sql`);
@@ -111,7 +144,7 @@ El cálculo pesado vive en funciones de Postgres (`supabase/migraciones/05_vista
 ```bash
 npm run motor            # calcula los indicadores y los compara con la referencia
 npm run motor:contraste  # contrasta las vistas SQL con el cálculo de referencia
-npm run test             # 63 pruebas
+npm run test             # 120 pruebas
 ```
 
 `motor:contraste` compara **estudiante por estudiante**. Son dos implementaciones

@@ -1,24 +1,10 @@
 'use client'
 
+import { BotonEnvio } from '@/componentes/ui/boton-envio'
 import { useActionState, useState } from 'react'
-import { useFormStatus } from 'react-dom'
 import { crearPerfil, type EstadoPerfil } from './acciones'
 
 interface Opcion { id: number; etiqueta: string }
-
-function Boton() {
-  const { pending } = useFormStatus()
-  return (
-    <button
-      type="submit"
-      disabled={pending}
-      className="rounded-md bg-institucional px-4 py-2 text-sm font-medium text-white
-                 transition hover:bg-institucional-claro disabled:opacity-60"
-    >
-      {pending ? 'Creando…' : 'Crear perfil'}
-    </button>
-  )
-}
 
 export function FormularioPerfil({
   universidades,
@@ -135,7 +121,7 @@ export function FormularioPerfil({
         </p>
       )}
 
-      <Boton />
+      <BotonEnvio enProgreso="Creando…">Crear perfil</BotonEnvio>
     </form>
   )
 }

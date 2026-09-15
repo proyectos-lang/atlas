@@ -1,18 +1,17 @@
 import Link from 'next/link'
 import { salir } from '@/app/entrar/acciones'
-import { RUTAS_POR_ROL, type Perfil } from '@/lib/auth/alcance'
+import { type Perfil } from '@/lib/auth/alcance'
+import { navegacionDe } from '@/lib/auth/navegacion'
+import { NavLateral } from './nav-lateral'
 
-const ETIQUETA: Record<string, string> = {
-  '/administrador': 'Administrador Institucional',
-  '/coordinador': 'Coordinador Académico',
-  '/asesor': 'Asesor Pedagógico',
-  '/docente': 'Docente',
-  '/estudiante': 'Estudiante',
-  '/analisis': 'Análisis',
-  '/admin': 'Administración',
-  '/componentes': 'Galería de componentes',
-  '/recomendador': 'Recomendaciones de IA',
+const NOMBRE_ROL: Record<string, string> = {
+  admin: 'Administrador institucional',
+  coordinador: 'Coordinador académico',
+  asesor: 'Asesor pedagógico',
+  docente: 'Docente',
+  estudiante: 'Estudiante',
 }
+
 
 /**
  * Marco común: banda superior azul institucional de 89 px y barra lateral
@@ -33,22 +32,11 @@ export function Marco({
   lateral?: React.ReactNode
   children: React.ReactNode
 }) {
-  const rutas = RUTAS_POR_ROL[perfil.rol]
+  const grupos = navegacionDe(perfil.rol)
 
   const navegacion = (
     <>
-      <nav className="mb-6 space-y-1">
-        {rutas.map((r) => (
-          <Link
-            key={r}
-            href={r}
-            className="block rounded-md px-3 py-2 text-sm text-white/85 transition
-                       hover:bg-white/10 hover:text-white"
-          >
-            {ETIQUETA[r] ?? r}
-          </Link>
-        ))}
-      </nav>
+      <NavLateral grupos={grupos} />
       {lateral}
     </>
   )
@@ -62,23 +50,57 @@ export function Marco({
         <div className="flex min-w-0 items-center gap-3">
           <label
             htmlFor="abrir-menu"
-            className="cursor-pointer rounded-md border border-white/30 p-2 text-white lg:hidden"
+            className="cursor-pointer rounded-lg border border-white/25 p-2 text-white
+                       transition hover:bg-white/10 lg:hidden"
             aria-label="Abrir menú"
           >
             <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden>
               <path d="M2 4h14M2 9h14M2 14h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
             </svg>
           </label>
-          <h1 className="truncate text-lg font-semibold text-white lg:text-2xl">
-            ATLAS - {titulo}
+
+          {/* Marca y título: la marca no cambia, el título sí. Separarlos
+              evita el "ATLAS - " repetido en cada pestaña del navegador. */}
+          <Link href="/inicio" className="flex shrink-0 items-center gap-2.5">
+            <span
+              className="flex h-9 w-9 items-center justify-center rounded-lg bg-white/15
+                         text-sm font-bold tracking-tight text-white"
+              aria-hidden
+            >
+              A
+            </span>
+            <span className="hidden text-lg font-semibold tracking-tight text-white sm:block">
+              ATLAS
+            </span>
+          </Link>
+
+          <span className="hidden h-6 w-px bg-white/20 lg:block" aria-hidden />
+
+          <h1 className="truncate text-base font-medium text-white/90 lg:text-lg">
+            {titulo}
           </h1>
         </div>
+
         <div className="flex shrink-0 items-center gap-3">
-          <span className="hidden text-sm text-white/80 sm:inline">{perfil.nombre}</span>
+          <div className="hidden text-right sm:block">
+            <span className="block text-sm font-medium leading-tight text-white">
+              {perfil.nombre}
+            </span>
+            <span className="block text-[11px] leading-tight text-white/60">
+              {NOMBRE_ROL[perfil.rol] ?? perfil.rol}
+            </span>
+          </div>
+          <span
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full
+                       bg-white/15 text-sm font-semibold text-white"
+            aria-hidden
+          >
+            {perfil.nombre.trim().charAt(0).toUpperCase()}
+          </span>
           <form action={salir}>
             <button
               type="submit"
-              className="rounded-md border border-white/30 px-3 py-1.5 text-sm text-white
+              className="rounded-lg border border-white/25 px-3 py-1.5 text-sm text-white
                          transition hover:bg-white/10"
             >
               Salir

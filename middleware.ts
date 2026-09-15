@@ -17,6 +17,10 @@ import { createServerClient } from '@supabase/ssr'
 // redirigía al login y el cron nunca llegaría a ejecutarse.
 const PUBLICAS = ['/entrar', '/auth', '/api/cron']
 
+// La raíz es la landing pública y se compara EXACTA, nunca como prefijo:
+// '/' como prefijo abriría la aplicación entera.
+const RAIZ_PUBLICA = '/'
+
 export async function middleware(peticion: NextRequest) {
   let respuesta = NextResponse.next({ request: peticion })
 
@@ -41,7 +45,9 @@ export async function middleware(peticion: NextRequest) {
 
   const { data: { user } } = await supabase.auth.getUser()
   const ruta = peticion.nextUrl.pathname
-  const esPublica = PUBLICAS.some((p) => ruta === p || ruta.startsWith(`${p}/`))
+  const esPublica =
+    ruta === RAIZ_PUBLICA ||
+    PUBLICAS.some((p) => ruta === p || ruta.startsWith(`${p}/`))
 
   if (!user && !esPublica) {
     const destino = peticion.nextUrl.clone()

@@ -1,28 +1,17 @@
 'use client'
 
 import { useActionState } from 'react'
-import { useFormStatus } from 'react-dom'
+import { useSearchParams } from 'next/navigation'
+import { BotonEnvio } from '@/componentes/ui/boton-envio'
 import { entrar, type EstadoEntrada } from './acciones'
-
-function Boton() {
-  const { pending } = useFormStatus()
-  return (
-    <button
-      type="submit"
-      disabled={pending}
-      className="mt-2 w-full rounded-md bg-institucional px-4 py-2.5 text-sm font-medium text-white
-                 transition hover:bg-institucional-claro disabled:opacity-60"
-    >
-      {pending ? 'Entrando…' : 'Entrar'}
-    </button>
-  )
-}
 
 export function FormularioEntrada() {
   const [estado, accion] = useActionState<EstadoEntrada, FormData>(entrar, {})
+  const siguiente = useSearchParams().get('siguiente') ?? ''
 
   return (
     <form action={accion} className="space-y-4">
+      <input type="hidden" name="siguiente" value={siguiente} />
       <div>
         <label htmlFor="email" className="block text-sm font-medium text-slate-700">
           Correo institucional
@@ -33,8 +22,8 @@ export function FormularioEntrada() {
           type="email"
           autoComplete="email"
           required
-          className="mt-1 w-full rounded-md border border-superficie-borde px-3 py-2 text-sm
-                     outline-none focus:border-institucional focus:ring-1 focus:ring-institucional"
+          className="mt-1.5 w-full rounded-lg border border-superficie-borde px-3 py-2.5 text-sm
+                     outline-none transition focus:border-institucional focus:ring-2 focus:ring-institucional/20"
         />
       </div>
 
@@ -48,8 +37,8 @@ export function FormularioEntrada() {
           type="password"
           autoComplete="current-password"
           required
-          className="mt-1 w-full rounded-md border border-superficie-borde px-3 py-2 text-sm
-                     outline-none focus:border-institucional focus:ring-1 focus:ring-institucional"
+          className="mt-1.5 w-full rounded-lg border border-superficie-borde px-3 py-2.5 text-sm
+                     outline-none transition focus:border-institucional focus:ring-2 focus:ring-institucional/20"
         />
       </div>
 
@@ -62,7 +51,9 @@ export function FormularioEntrada() {
         </p>
       )}
 
-      <Boton />
+      <BotonEnvio enProgreso="Entrando…" tamano="lg" className="mt-2 w-full">
+        Entrar
+      </BotonEnvio>
     </form>
   )
 }

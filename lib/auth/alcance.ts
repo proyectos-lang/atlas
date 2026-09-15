@@ -47,11 +47,11 @@ export const INICIO_POR_ROL: Record<Rol, string> = {
 
 /** Rutas que cada rol puede visitar. */
 export const RUTAS_POR_ROL: Record<Rol, readonly string[]> = {
-  admin: ['/administrador', '/coordinador', '/asesor', '/docente', '/estudiante', '/analisis', '/admin', '/componentes', '/recomendador'],
-  coordinador: ['/coordinador', '/asesor', '/docente', '/estudiante', '/analisis', '/recomendador'],
-  asesor: ['/asesor', '/analisis', '/recomendador'],
-  docente: ['/docente', '/analisis'],
-  estudiante: ['/estudiante'],
+  admin: ['/inicio', '/administrador', '/coordinador', '/asesor', '/docente', '/estudiante', '/analisis', '/admin', '/componentes', '/recomendador', '/acerca-de'],
+  coordinador: ['/inicio', '/coordinador', '/asesor', '/docente', '/estudiante', '/analisis', '/recomendador', '/acerca-de'],
+  asesor: ['/inicio', '/asesor', '/analisis', '/recomendador', '/acerca-de'],
+  docente: ['/inicio', '/docente', '/analisis', '/acerca-de'],
+  estudiante: ['/inicio', '/estudiante', '/acerca-de'],
 }
 
 export function puedeVer(rol: Rol, ruta: string): boolean {
