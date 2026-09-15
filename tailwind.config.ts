@@ -1,4 +1,5 @@
 import type { Config } from 'tailwindcss'
+import animate from 'tailwindcss-animate'
 
 /**
  * Sistema de diseño ATLAS (§9 del plan).
@@ -53,7 +54,7 @@ suave: '#F7F9FC',   // fondo de tarjeta destacada
       },
     },
   },
-  plugins: [require('tailwindcss-animate')],
+  plugins: [animate],
 }
 
 export default config
