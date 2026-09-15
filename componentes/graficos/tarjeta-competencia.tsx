@@ -1,3 +1,4 @@
+import { MOSTRAR_AVISOS_SEMILLA } from '@/lib/kpi/catalogo'
 import { metaDe, nivelDe } from '@/lib/kpi/escala'
 import { BadgeNivel } from './base'
 
@@ -69,9 +70,9 @@ export function TarjetaCompetencia({
 
       <p className="mt-2 text-xs text-texto-secundario">
         {meta.texto}
-        {conAviso && (
-          <span className="ml-1 text-amber-700" title="Incluye indicadores de rúbrica simulada">
-            · incluye datos simulados
+        {conAviso && MOSTRAR_AVISOS_SEMILLA && (
+          <span className="ml-1 text-amber-700" title="Incluye criterios pendientes de evaluación docente">
+            · incluye criterios pendientes
           </span>
         )}
       </p>

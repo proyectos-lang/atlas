@@ -3,7 +3,7 @@ import { Marco } from '@/componentes/marco'
 import { Tarjeta, BadgeNivel } from '@/componentes/graficos/base'
 import { clienteServidor } from '@/lib/supabase/servidor'
 import { estudiantes } from '@/lib/kpi/consultas'
-import { nombreDe, esSemilla } from '@/lib/kpi/catalogo'
+import { nombreDe, mostrarAvisoSemilla } from '@/lib/kpi/catalogo'
 import { aprobar, rechazar, implementar } from './acciones'
 
 export const metadata = { title: 'Revisión de recomendaciones · ATLAS' }
@@ -70,7 +70,7 @@ export default async function PaginaRevision() {
                 const destinatario = r.usuario_id === null
                   ? 'Todo el curso'
                   : (codigoEst.get(Number(r.usuario_id)) ?? '—')
-                const simulado = esSemilla(String(r.sub_indicador_critico ?? ''))
+                const simulado = mostrarAvisoSemilla(String(r.sub_indicador_critico ?? ''))
                 const pendiente = r.estado === 'Pendiente de revisión docente'
                 const aprobada = r.estado === 'Aprobada'
 
@@ -111,7 +111,7 @@ export default async function PaginaRevision() {
                       {r.sub_indicador_critico && (
                         <>Indicador crítico: {nombreDe(String(r.sub_indicador_critico))}
                         {simulado && (
-                          <span className="ml-1 text-amber-700">· calculado sobre datos simulados</span>
+                          <span className="ml-1 text-amber-700">· pendiente de evaluación docente</span>
                         )}
                         {' · '}</>
                       )}

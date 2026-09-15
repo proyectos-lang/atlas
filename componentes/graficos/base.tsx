@@ -1,5 +1,5 @@
 import { nivelDe } from '@/lib/kpi/escala'
-import { AVISO_SEMILLA, esSemilla, nombreDe } from '@/lib/kpi/catalogo'
+import { AVISO_SEMILLA, mostrarAvisoSemilla, nombreDe } from '@/lib/kpi/catalogo'
 
 /**
  * Piezas base del sistema de diseño (§9).
@@ -17,13 +17,13 @@ export function Tarjeta({
 }: {
   titulo?: string
   subtitulo?: string
-  /** Si el indicador se calcula sobre rúbrica simulada, se avisa. */
+  /** Si el indicador incluye criterios de rúbrica sin calificar, se avisa. */
   codigoKpi?: string
   destacada?: boolean
   className?: string
   children: React.ReactNode
 }) {
-  const semilla = codigoKpi ? esSemilla(codigoKpi) : false
+  const semilla = codigoKpi ? mostrarAvisoSemilla(codigoKpi) : false
 
   return (
     <section
@@ -150,7 +150,7 @@ export function TarjetaIndicador({
   escala?: 'Porcentaje' | 'Puntos'
   decimales?: number
 }) {
-  const semilla = codigoKpi ? esSemilla(codigoKpi) : false
+  const semilla = codigoKpi ? mostrarAvisoSemilla(codigoKpi) : false
   const sinDato = valor === null || !Number.isFinite(valor)
 
   return (

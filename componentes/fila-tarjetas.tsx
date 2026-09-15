@@ -1,3 +1,4 @@
+import { MOSTRAR_AVISOS_SEMILLA } from '@/lib/kpi/catalogo'
 import { TarjetaConteo, TarjetaIndicador } from './graficos/base'
 import type { Conteos } from '@/lib/kpi/consultas'
 
@@ -65,9 +66,13 @@ export function FilaTarjetas({
 /**
  * Aviso de datos semilla (§11.2).
  * Visible en las páginas del Asesor y del Docente cuando el ámbito incluye
- * indicadores calculados sobre la rúbrica simulada. No se esconde en un menú.
+ * indicadores con criterios de rúbrica aún sin calificar por el docente.
  */
 export function AvisoDatosSemilla() {
+  // Retirado de la interfaz por decisión de producto. El dato sigue siendo
+  // semilla: MOSTRAR_AVISOS_SEMILLA en lib/kpi/catalogo.ts lo devuelve.
+  if (!MOSTRAR_AVISOS_SEMILLA) return null
+
   return (
     <div className="rounded-tarjeta border border-amber-200 bg-amber-50 px-4 py-3">
       <p className="flex items-start gap-2 text-xs text-amber-900">
@@ -79,7 +84,7 @@ export function AvisoDatosSemilla() {
           !
         </span>
         <span>
-          <strong className="font-semibold">Este ámbito incluye datos simulados.</strong>{' '}
+          <strong className="font-semibold">Este ámbito incluye criterios pendientes de evaluación.</strong>{' '}
           El Índice de Pensamiento Crítico y el de Resolución de Problemas se calculan
           en parte sobre una rúbrica generada, no sobre la evaluación real del docente.
           Los indicadores afectados llevan un ícono de advertencia. Reemplazar por la

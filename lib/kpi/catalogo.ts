@@ -98,9 +98,33 @@ export function nombreDe(codigo: string): string {
   return POR_CODIGO.get(codigo)?.nombre ?? codigo
 }
 
-/** ¿Se calcula sobre datos de rúbrica simulados? */
+/**
+ * ¿Se calcula sobre datos de rúbrica que todavía son semilla?
+ *
+ * Es el hecho, y no depende de si la interfaz lo muestra: el agente de IA
+ * lo consulta para no fundamentar recomendaciones en estos indicadores.
+ * No usar para decidir qué pintar en pantalla — para eso está
+ * `mostrarAvisoSemilla()`.
+ */
 export function esSemilla(codigo: string): boolean {
   return POR_CODIGO.get(codigo)?.estadoDato === 'Semilla'
+}
+
+/**
+ * ¿La interfaz debe advertir de que el dato es semilla?
+ *
+ * Decisión de producto, separada del hecho: los avisos se retiraron de la
+ * interfaz por petición expresa, pero los datos de rúbrica SIGUEN siendo
+ * semilla generada por fórmula, no evaluación real del docente.
+ *
+ * Poner esto en `true` devuelve todos los avisos a la interfaz de una vez.
+ * Lo que nunca debe hacerse es tocar `esSemilla()` para apagarlos: eso
+ * desarmaría la restricción del agente, que sí depende del hecho.
+ */
+export const MOSTRAR_AVISOS_SEMILLA = false
+
+export function mostrarAvisoSemilla(codigo: string): boolean {
+  return MOSTRAR_AVISOS_SEMILLA && esSemilla(codigo)
 }
 
 export const AVISO_SEMILLA =

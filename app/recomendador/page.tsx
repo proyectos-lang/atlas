@@ -4,7 +4,7 @@ import { Tarjeta } from '@/componentes/graficos/base'
 import { clienteServidor } from '@/lib/supabase/servidor'
 import { cursos, estudiantes, universidades } from '@/lib/kpi/consultas'
 import { indicesPorEstudiante } from '@/lib/kpi/indicadores'
-import { INDICE_DE_COMPETENCIA, nombreDe, esSemilla } from '@/lib/kpi/catalogo'
+import { INDICE_DE_COMPETENCIA, nombreDe, mostrarAvisoSemilla } from '@/lib/kpi/catalogo'
 import { PanelRecomendador } from '@/componentes/panel-recomendador'
 
 export const metadata = { title: 'Recomendaciones de IA · ATLAS' }
@@ -95,7 +95,7 @@ export default async function PaginaRecomendador() {
                 const destinatario = r.usuario_id === null
                   ? 'Todo el curso'
                   : (codigoEst.get(Number(r.usuario_id)) ?? '—')
-                const simulado = esSemilla(String(r.sub_indicador_critico ?? ''))
+                const simulado = mostrarAvisoSemilla(String(r.sub_indicador_critico ?? ''))
                 return (
                   <li key={String(r.id)} className="rounded-md border border-superficie-borde p-3">
                     <div className="flex flex-wrap items-center gap-2 text-sm">
@@ -126,7 +126,7 @@ export default async function PaginaRecomendador() {
                       {r.sub_indicador_critico && (
                         <> · indicador crítico: {nombreDe(String(r.sub_indicador_critico))}
                           {simulado && (
-                            <span className="ml-1 text-amber-700">· sobre datos simulados</span>
+                            <span className="ml-1 text-amber-700">· pendiente de evaluación docente</span>
                           )}
                         </>
                       )}

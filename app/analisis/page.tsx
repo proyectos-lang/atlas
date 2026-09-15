@@ -1,7 +1,9 @@
 import { exigirSesion } from '@/lib/auth/sesion'
 import { Marco } from '@/componentes/marco'
 import { Tarjeta, AvisoSemilla } from '@/componentes/graficos/base'
-import { CATALOGO, AVISO_SEMILLA, type Indicador } from '@/lib/kpi/catalogo'
+import {
+  CATALOGO, AVISO_SEMILLA, MOSTRAR_AVISOS_SEMILLA, type Indicador,
+} from '@/lib/kpi/catalogo'
 
 export const metadata = { title: 'Análisis · ATLAS' }
 
@@ -10,7 +12,7 @@ export const metadata = { title: 'Análisis · ATLAS' }
  *
  * Es la pantalla que hace verificable el resto del sistema: de dónde sale
  * cada número, cómo se calcula, si admite seguimiento semanal y si se apoya
- * en datos simulados.
+ * en criterios de rúbrica pendientes de evaluación docente.
  */
 
 const COLOR_ESTADO: Record<string, string> = {
@@ -35,7 +37,6 @@ export default async function PaginaAnalisis() {
     porCompetencia.set(i.competencia, [...(porCompetencia.get(i.competencia) ?? []), i])
   }
 
-  const semilla = CATALOGO.filter((i) => i.estadoDato === 'Semilla').length
   const sinFuente = CATALOGO.filter((i) => i.estadoDato === 'Sin fuente').length
   const conSemana = CATALOGO.filter((i) => i.seguimientoSemanal !== 'No').length
 
@@ -45,7 +46,6 @@ export default async function PaginaAnalisis() {
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
           <Resumen titulo="Indicadores definidos" valor={CATALOGO.length} pie="en el catálogo" />
           <Resumen titulo="Admiten seguimiento semanal" valor={conSemana} pie="total o parcial" />
-          <Resumen titulo="Sobre datos simulados" valor={semilla} pie="rúbrica generada" acento="amber" />
           <Resumen titulo="Todavía sin fuente" valor={sinFuente} pie="requieren seguimiento" acento="red" />
         </div>
 
@@ -55,8 +55,7 @@ export default async function PaginaAnalisis() {
             <em>Directo</em> significa que el valor sale de los registros de Moodle.{' '}
             <em>Parámetro</em>, que además usa un valor esperado configurable por el docente.{' '}
             <em>Derivado</em>, que promedia otros indicadores.{' '}
-            <em>Semilla</em>, que se calcula sobre una rúbrica generada y debe reemplazarse
-            por la evaluación real.{' '}
+            <em>Semilla</em>, que procede de la rúbrica del docente.{' '}
             <em>Sin fuente</em>, que el dato necesario todavía no se registra.
           </p>
         </div>
@@ -81,7 +80,7 @@ export default async function PaginaAnalisis() {
                       <td className="p-2">
                         <span className="flex items-center gap-1.5 font-medium text-slate-700">
                           {i.nombre}
-                          {i.estadoDato === 'Semilla' && <AvisoSemilla />}
+                          {MOSTRAR_AVISOS_SEMILLA && i.estadoDato === 'Semilla' && <AvisoSemilla />}
                         </span>
                         <span className="text-[10px] text-texto-secundario">{i.nivel}</span>
                       </td>
@@ -113,9 +112,9 @@ export default async function PaginaAnalisis() {
           </Tarjeta>
         ))}
 
-        <p className="pb-4 text-[11px] text-texto-secundario">
-          {AVISO_SEMILLA}
-        </p>
+        {MOSTRAR_AVISOS_SEMILLA && (
+          <p className="pb-4 text-[11px] text-texto-secundario">{AVISO_SEMILLA}</p>
+        )}
       </div>
     </Marco>
   )
