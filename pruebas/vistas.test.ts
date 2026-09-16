@@ -130,7 +130,8 @@ describe('indicadores del agente sin ciclo de revisión', () => {
 
     const { indicadoresAgente } = await import('@/lib/kpi/indicadores')
     const ag = await indicadoresAgente({
-      rol: 'admin', universidadIds: null, cursoIds: null, usuarioIds: null, perfilId: 1,
+      rol: 'admin', universidadIds: null, programaIds: null,
+  cursoIds: null, grupoIds: null, usuarioIds: null, perfilId: 1,
     })
     expect(ag).toEqual({ tar: null, nra: null, trr: null, eia: null })
   }, 60_000)

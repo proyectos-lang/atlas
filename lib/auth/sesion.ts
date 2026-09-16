@@ -4,7 +4,7 @@ import { createServerClient } from '@supabase/ssr'
 import { redirect } from 'next/navigation'
 import { clienteServidor } from '@/lib/supabase/servidor'
 import {
-  alcanceDe, INICIO_POR_ROL, puedeVer,
+  alcanceDe, inicioDe, perfilPuedeVer,
   type Alcance, type Perfil, type Rol,
 } from './alcance'
 
@@ -43,7 +43,7 @@ export async function perfilActual(): Promise<Perfil | null> {
   const db = clienteServidor()
   const { data, error } = await db
     .from('perfiles')
-    .select('id, auth_user_id, nombre, email, rol, universidad_id, curso_id, usuario_id, activo')
+    .select('id, auth_user_id, nombre, email, rol, universidad_id, programa_id, curso_id, grupo_id, usuario_id, activo, modulos')
     .eq('auth_user_id', user.id)
     .maybeSingle()
 
@@ -56,9 +56,14 @@ export async function perfilActual(): Promise<Perfil | null> {
     email: String(data.email),
     rol: data.rol as Rol,
     universidadId: data.universidad_id === null ? null : Number(data.universidad_id),
+    programaId: data.programa_id == null ? null : Number(data.programa_id),
     cursoId: data.curso_id === null ? null : Number(data.curso_id),
+    grupoId: data.grupo_id == null ? null : Number(data.grupo_id),
     usuarioId: data.usuario_id === null ? null : Number(data.usuario_id),
     activo: Boolean(data.activo),
+    // Ausente (columna sin migrar) o NULL significan lo mismo: sin
+    // personalizar. El array vacío, en cambio, sí es una decisión.
+    modulos: Array.isArray(data.modulos) ? data.modulos.map(String) : null,
   }
 }
 
@@ -74,8 +79,11 @@ export async function exigirSesion(ruta?: string): Promise<{
   const perfil = await perfilActual()
   if (!perfil) redirect('/entrar')
 
-  if (ruta && !puedeVer(perfil.rol, ruta)) {
-    redirect(INICIO_POR_ROL[perfil.rol])
+  if (ruta && !perfilPuedeVer(perfil, ruta)) {
+    // A dónde mandarlo: nunca a una página que tampoco pueda ver, o el
+    // redirect rebotaría contra esta misma comprobación sin fin.
+    const destino = inicioDe(perfil)
+    redirect(destino ?? '/sin-acceso')
   }
 
   return { perfil, alcance: alcanceDe(perfil) }
@@ -87,6 +95,6 @@ export async function exigirRol(roles: readonly Rol[]): Promise<{
   alcance: Alcance
 }> {
   const { perfil, alcance } = await exigirSesion()
-  if (!roles.includes(perfil.rol)) redirect(INICIO_POR_ROL[perfil.rol])
+  if (!roles.includes(perfil.rol)) redirect(inicioDe(perfil) ?? '/sin-acceso')
   return { perfil, alcance }
 }

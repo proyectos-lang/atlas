@@ -1,4 +1,4 @@
-import { RUTAS_POR_ROL, type Rol } from './alcance'
+import { RUTAS_POR_ROL, modulosDe, type Perfil, type Rol } from './alcance'
 
 /**
  * Navegación lateral, agrupada por tipo de tarea.
@@ -63,13 +63,35 @@ const GRUPOS: readonly { titulo: string; items: readonly ItemNav[] }[] = [
  * Una ruta que el rol no tenga en `RUTAS_POR_ROL` no aparece, aunque figure
  * en el catálogo de arriba.
  */
-export function navegacionDe(rol: Rol): GrupoNav[] {
-  const permitidas = new Set(RUTAS_POR_ROL[rol])
+export function navegacionDe(
+  perfilORol: Pick<Perfil, 'rol' | 'modulos'> | Rol
+): GrupoNav[] {
+  // Acepta el rol suelto para las pruebas y los sitios donde no hay perfil;
+  // cuando lo hay, manda lo que el administrador configuró.
+  const permitidas = new Set(
+    typeof perfilORol === 'string'
+      ? RUTAS_POR_ROL[perfilORol]
+      : modulosDe(perfilORol)
+  )
 
   return GRUPOS.map((g) => ({
     titulo: g.titulo,
     items: g.items.filter((i) => permitidas.has(i.ruta)),
   })).filter((g) => g.items.length > 0)
+}
+
+/** Catálogo completo de módulos, para la pantalla de permisos. */
+export function catalogoModulos(): { titulo: string; items: ItemNav[] }[] {
+  return GRUPOS.map((g) => ({ titulo: g.titulo, items: [...g.items] }))
+}
+
+/** Etiqueta legible de una ruta. Si no está en el catálogo, la propia ruta. */
+export function etiquetaModulo(ruta: string): string {
+  for (const g of GRUPOS) {
+    const i = g.items.find((x) => x.ruta === ruta)
+    if (i) return i.etiqueta
+  }
+  return ruta
 }
 
 /**

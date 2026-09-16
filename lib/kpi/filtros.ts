@@ -1,5 +1,6 @@
 import 'server-only'
 import { clienteServidor } from '@/lib/supabase/servidor'
+import { resolverJerarquia } from '@/lib/kpi/indicadores'
 import { aplicarFiltros, alcanceVacio, type Alcance } from '@/lib/auth/alcance'
 import { COMPETENCIAS } from './catalogo'
 
@@ -18,6 +19,7 @@ import { COMPETENCIAS } from './catalogo'
 export interface Seleccion {
   universidad?: string
   programa?: string
+  grupo?: string
   curso?: string
   competencia?: string
   ilo?: string
@@ -64,6 +66,7 @@ export function seleccionDe(
   return {
     universidad: leer(params.universidad),
     programa: leer(params.programa),
+    grupo: leer(params.grupo),
     curso: leer(params.curso),
     competencia: leer(params.competencia),
     ilo: leer(params.ilo),
@@ -116,6 +119,24 @@ export async function resolverFiltros(
   const cursosVisibles = cursos.filter((c) => idsUniVisibles.includes(c.universidadId))
   const cursoSel = cursosVisibles.find((c) => c.codigo === seleccion.curso)
 
+  // ---------- Encadenado: curso -> grupo ----------
+  // Los grupos son secciones del curso. Si la migración 08 no está
+  // aplicada, la consulta falla y la lista queda vacía: el filtro
+  // simplemente no aparece y todo lo demás sigue funcionando.
+  const idsCursoVisible = cursosVisibles.map((c) => c.id)
+  const gruposRes = idsCursoVisible.length
+    ? await db.from('grupos')
+        .select('id, codigo, nombre, curso_id')
+        .in('curso_id', cursoSel ? [cursoSel.id] : idsCursoVisible)
+        .order('codigo')
+    : { data: [] as Record<string, unknown>[], error: null }
+
+  const gruposVisibles = (gruposRes.error ? [] : (gruposRes.data ?? [])).map((g) => ({
+    id: Number(g.id), codigo: String(g.codigo),
+    nombre: String(g.nombre), cursoId: Number(g.curso_id),
+  }))
+  const grupoSel = gruposVisibles.find((g) => g.codigo === seleccion.grupo)
+
   // ---------- Tipos de actividad e ILOs del ámbito ----------
   const idsCurso = cursosVisibles.map((c) => c.id)
   const [tiposRes, ilosRes] = await Promise.all([
@@ -158,6 +179,17 @@ export async function resolverFiltros(
         ? cursos.map((c) => ({ valor: c.codigo, etiqueta: c.nombre }))
         : opciones(cursosVisibles.map((c) => ({ valor: c.codigo, etiqueta: c.nombre }))),
     },
+    ...(gruposVisibles.length > 0
+      ? [{
+          clave: 'grupo', etiqueta: 'Grupo', fijo: gruposVisibles.length === 1,
+          seleccionado: gruposVisibles.length === 1
+            ? gruposVisibles[0].codigo
+            : (grupoSel?.codigo ?? TODAS),
+          opciones: gruposVisibles.length === 1
+            ? gruposVisibles.map((g) => ({ valor: g.codigo, etiqueta: g.nombre }))
+            : opciones(gruposVisibles.map((g) => ({ valor: g.codigo, etiqueta: g.nombre }))),
+        } as Filtro]
+      : []),
     {
       clave: 'competencia', etiqueta: 'Competencia', fijo: false,
       seleccionado: seleccion.competencia ?? TODAS,
@@ -192,14 +224,20 @@ export async function resolverFiltros(
   const restringido = aplicarFiltros(alcance, {
     universidadIds: uniSel ? [uniSel.id] : (progSel ? idsUniVisibles : null),
     cursoIds: cursosPedidos,
+    grupoIds: grupoSel ? [grupoSel.id] : null,
   })
 
   const semana = Number(seleccion.semana)
   const semanas = Number.isInteger(semana) && semana >= 1 && semana <= 6 ? [semana] : null
 
+  // El motor no conoce grupo ni programa: se traducen a la lista de
+  // estudiantes afectados antes de que las consultas los usen. Sin esto el
+  // filtro de grupo se vería en pantalla pero no cambiaría ninguna cifra.
+  const alcanceResuelto = await resolverJerarquia(restringido)
+
   return {
     controles,
-    alcance: restringido,
+    alcance: alcanceResuelto,
     semanas,
     competencia: seleccion.competencia || null,
     ilo: seleccion.ilo || null,

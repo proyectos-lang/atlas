@@ -3,7 +3,8 @@ import { seleccionDe } from '@/lib/kpi/filtros'
 import { alcanceDe, aplicarFiltros, type Perfil } from '@/lib/auth/alcance'
 
 const perfil = (rol: Perfil['rol'], a: Partial<Perfil> = {}): Perfil => ({
-  id: 1, authUserId: 'u', nombre: 'X', email: 'x@y.z', activo: true, rol,
+  id: 1, authUserId: 'u', nombre: 'X', email: 'x@y.z', activo: true, modulos: null, rol,
+  programaId: a.programaId ?? null, grupoId: a.grupoId ?? null,
   universidadId: a.universidadId ?? null,
   cursoId: a.cursoId ?? null,
   usuarioId: a.usuarioId ?? null,

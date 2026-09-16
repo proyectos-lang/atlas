@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
 import { exigirSesion } from '@/lib/auth/sesion'
-import { INICIO_POR_ROL } from '@/lib/auth/alcance'
+import { inicioDe, perfilPuedeVer, INICIO_POR_ROL } from '@/lib/auth/alcance'
 import { Marco } from '@/componentes/marco'
 import { navegacionDe } from '@/lib/auth/navegacion'
 import { BotonEnlace } from '@/componentes/ui/boton'
@@ -35,8 +35,13 @@ export default async function PaginaInicio() {
     indices(alcance, { semanas: null }),
   ])
 
-  const grupos = navegacionDe(perfil.rol)
-  const tableroPrincipal = INICIO_POR_ROL[perfil.rol]
+  const grupos = navegacionDe(perfil)
+  // El tablero del rol puede haber quedado fuera de sus módulos: en ese
+  // caso el botón llevaría a una redirección inmediata.
+  const tableroRol = INICIO_POR_ROL[perfil.rol]
+  const tableroPrincipal = perfilPuedeVer(perfil, tableroRol)
+    ? tableroRol
+    : (grupos[0]?.items[0]?.ruta ?? null)
 
   // Accesos rápidos: todo lo que el rol puede ver, menos el propio /inicio.
   const accesos = grupos.flatMap((g) =>
@@ -70,17 +75,21 @@ export default async function PaginaInicio() {
             </p>
 
             <div className="mt-6 flex flex-wrap items-center gap-3">
-              <BotonEnlace href={tableroPrincipal} variante="secundario">
-                Ir a mi tablero
-                <ArrowRight size={16} aria-hidden />
-              </BotonEnlace>
-              <Link
-                href="/acerca-de"
-                className="rounded-lg px-3.5 py-2 text-sm font-medium text-white/80
-                           transition hover:bg-white/10 hover:text-white"
-              >
-                Cómo se calculan los indicadores
-              </Link>
+              {tableroPrincipal && (
+                <BotonEnlace href={tableroPrincipal} variante="secundario">
+                  Ir a mi tablero
+                  <ArrowRight size={16} aria-hidden />
+                </BotonEnlace>
+              )}
+              {perfilPuedeVer(perfil, '/acerca-de') && (
+                <Link
+                  href="/acerca-de"
+                  className="rounded-lg px-3.5 py-2 text-sm font-medium text-white/80
+                             transition hover:bg-white/10 hover:text-white"
+                >
+                  Cómo se calculan los indicadores
+                </Link>
+              )}
             </div>
           </div>
         </section>

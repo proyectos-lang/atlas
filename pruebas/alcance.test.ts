@@ -5,7 +5,8 @@ import {
 } from '@/lib/auth/alcance'
 
 const base: Omit<Perfil, 'rol' | 'universidadId' | 'cursoId' | 'usuarioId'> = {
-  id: 1, authUserId: 'u', nombre: 'X', email: 'x@y.z', activo: true,
+  id: 1, authUserId: 'u', nombre: 'X', email: 'x@y.z', activo: true, modulos: null,
+  programaId: null, grupoId: null,
 }
 
 const perfil = (

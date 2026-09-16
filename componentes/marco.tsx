@@ -32,7 +32,7 @@ export function Marco({
   lateral?: React.ReactNode
   children: React.ReactNode
 }) {
-  const grupos = navegacionDe(perfil.rol)
+  const grupos = navegacionDe(perfil)
 
   const navegacion = (
     <>

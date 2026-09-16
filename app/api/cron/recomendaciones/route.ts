@@ -19,7 +19,8 @@ export async function POST(peticion: NextRequest) {
 
   // El cron corre sin sesión: alcance completo, explícito y trazable.
   const alcance: Alcance = {
-    rol: 'admin', universidadIds: null, cursoIds: null, usuarioIds: null, perfilId: 0,
+    rol: 'admin', universidadIds: null, programaIds: null,
+    cursoIds: null, grupoIds: null, usuarioIds: null, perfilId: 0,
   }
 
   try {

@@ -34,6 +34,8 @@ Ejecutar **en orden** desde el SQL Editor de Supabase:
 | 4 | `supabase/migraciones/03_recomendaciones_perfiles.sql` | recomendaciones y perfiles |
 | 5 | `supabase/migraciones/04_seed_rubrica_parametros.sql` | semillas deterministas |
 | 6 | `supabase/migraciones/06_perfil_egreso.sql` | perfil de egreso por programa |
+| 7 | `supabase/migraciones/07_permisos_modulos.sql` | permisos de módulo por perfil |
+| 8 | `supabase/migraciones/08_jerarquia.sql` | programas, grupos y alcance jerárquico |
 
 > La migración 04 depende de que `usuarios` y `semanas` ya tengan datos.
 > Ejecutarla **después** de `npm run seed`.
@@ -82,6 +84,65 @@ Anclajes de la semilla de rúbrica (1296 filas):
 | TD | 850 | 1080 | 78,70 % |
 | NIA | 898 | 1296 | 69,29 % |
 | UEA | 616 | 864 | 71,30 % |
+
+## Jerarquía académica
+
+`Universidad → Programa → Curso → Grupo → estudiantes`, con el docente
+asignado al grupo.
+
+Antes de la migración 08, `universidades` mezclaba institución y programa en
+una fila: "Universidad A / Ingeniería de Sistemas" era **una** fila, y el
+filtro de programa trabajaba con el texto de esa columna. Eso impedía que una
+universidad tuviera varios programas. Ahora `programas` es una tabla propia y
+`grupos` divide cada curso en secciones.
+
+**La migración no toca ninguna tabla de hechos.** Foros, colaboración, logs,
+evaluaciones, rúbrica y resultados siguen colgando de usuario y curso igual
+que siempre, y por eso los valores de referencia no se mueven. Si tras
+aplicarla `npm run motor` deja de dar 73,4 % y 36·36·36·24·11, algo salió mal.
+
+El `Alcance` pasa de tres dimensiones a cinco. Un detalle que importa: un
+coordinador **con programa asignado se ciñe al programa, no a la
+universidad**. Ceñir sólo por universidad le mostraría los demás programas de
+su institución en cuanto hubiera más de uno — una escalada de privilegios
+silenciosa. `pruebas/jerarquia.test.ts` lo verifica.
+
+Se administra desde **Administración → Jerarquía académica**: crear programas
+y grupos, asignar el docente responsable de cada grupo y mover cursos entre
+programas. El alcance de cada perfil (a qué programa o grupo se ciñe) se
+asigna en **Perfiles de acceso**; son dos cosas distintas y la interfaz lo
+advierte: asignar a alguien como docente de un grupo lo deja registrado como
+responsable, pero no le concede acceso por sí solo.
+
+El motor SQL no conoce programa ni grupo: `resolverJerarquia()` en
+`lib/kpi/indicadores.ts` los traduce a la lista de estudiantes afectados
+antes de consultar. Se hizo así a propósito, para no tocar
+`05_vistas_kpi.sql` y arriesgar los valores de referencia.
+
+## Permisos de módulo
+
+El rol decide qué pantallas ve alguien por defecto; el administrador puede
+ajustar esa lista perfil por perfil desde **Administración → Perfiles de
+acceso**, al crear el perfil o después.
+
+**Un módulo es una pantalla, no un permiso sobre datos.** Conceder
+`/administrador` a un docente le muestra el tablero institucional, pero
+poblado sólo con los datos de su curso: el `Alcance` sigue decidiendo qué
+filas se consultan y no se toca aquí. La separación es deliberada y hay una
+prueba que falla si alguien intenta derivar alcance de los módulos.
+
+`perfiles.modulos` distingue tres estados, y confundir los dos últimos sería
+grave:
+
+- `null` — sin personalizar: usa las rutas de su rol. Es el estado de todos
+  los perfiles anteriores a la migración 07, y por eso la columna no lleva
+  `DEFAULT '{}'`.
+- `[]` — ningún módulo: puede iniciar sesión pero no ve nada, y aterriza en
+  `/sin-acceso`.
+- `['/inicio', …]` — exactamente esos módulos.
+
+Un administrador no puede quitarse a sí mismo el módulo de Administración:
+perdería el acceso a la pantalla desde la que se arregla.
 
 ## Perfil de egreso
 

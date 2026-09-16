@@ -239,24 +239,35 @@ export async function generarRecomendaciones(
   // perfil: es contexto adicional, nunca un requisito para generar.
   const egresoPorCurso = new Map<number, { texto: string; notas: string | null }>()
   {
-    const { data: cursosUniv } = await db.from('cursos').select('id, universidad_id')
+    const { data: cursosUniv } = await db.from('cursos').select('*')
     const { data: egresos, error: eEgreso } = await db
       .from('perfiles_egreso')
-      .select('universidad_id, perfil_egreso, notas, activo')
+      .select('*')
       .eq('activo', true)
 
     if (!eEgreso) {
-      const porUniv = new Map(
-        (egresos ?? []).map((e) => [
-          Number(e.universidad_id),
-          {
-            texto: String(e.perfil_egreso),
-            notas: e.notas === null ? null : String(e.notas),
-          },
-        ])
-      )
+      // El perfil de egreso pertenece al programa. Antes de la jerarquía
+      // (migración 08) se ataba a `universidades`, porque esa tabla ERA el
+      // programa. Se indexa por ambas claves para que la migración no deje
+      // al agente sin contexto: sin este cuidado la pérdida sería SILENCIOSA
+      // --el bloque está dentro de un `if` tolerante y no lanzaría nada--.
+      const porPrograma = new Map<number, { texto: string; notas: string | null }>()
+      const porUniv = new Map<number, { texto: string; notas: string | null }>()
+
+      for (const e of egresos ?? []) {
+        const valor = {
+          texto: String(e.perfil_egreso),
+          notas: e.notas == null ? null : String(e.notas),
+        }
+        if (e.programa_id != null) porPrograma.set(Number(e.programa_id), valor)
+        if (e.universidad_id != null) porUniv.set(Number(e.universidad_id), valor)
+      }
+
       for (const c of cursosUniv ?? []) {
-        const e = porUniv.get(Number(c.universidad_id))
+        const porProg = c.programa_id != null
+          ? porPrograma.get(Number(c.programa_id))
+          : undefined
+        const e = porProg ?? porUniv.get(Number(c.universidad_id))
         if (e) egresoPorCurso.set(Number(c.id), e)
       }
     }

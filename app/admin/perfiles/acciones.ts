@@ -13,6 +13,25 @@ export interface EstadoPerfil {
 
 const ROLES: Rol[] = ['admin', 'coordinador', 'asesor', 'docente', 'estudiante']
 
+/**
+ * Módulos enviados por el formulario.
+ *
+ * Devuelve `null` cuando el formulario no traía el selector (perfil sin
+ * personalizar, usa los de su rol) y `[]` cuando el administrador
+ * desmarcó todo. Confundir ambos casos haría que quitar todos los módulos
+ * devolviera silenciosamente los del rol.
+ */
+function modulosDelFormulario(formulario: FormData): string[] | null {
+  if (!formulario.get('modulos_presente')) return null
+
+  const rutas = formulario
+    .getAll('modulos')
+    .map((v) => String(v).trim())
+    .filter((r) => /^\/[A-Za-z0-9/_-]{1,99}$/.test(r))
+
+  return [...new Set(rutas)]
+}
+
 function nuloOEntero(v: FormDataEntryValue | null): number | null {
   const s = String(v ?? '').trim()
   if (!s) return null
@@ -45,7 +64,9 @@ export async function crearPerfil(
   }
 
   const universidadId = nuloOEntero(formulario.get('universidad_id'))
+  const programaId = nuloOEntero(formulario.get('programa_id'))
   const cursoId = nuloOEntero(formulario.get('curso_id'))
+  const grupoId = nuloOEntero(formulario.get('grupo_id'))
   const usuarioId = nuloOEntero(formulario.get('usuario_id'))
 
   // Coherencia del alcance: un rol restringido sin su ámbito no vería nada.
@@ -81,9 +102,12 @@ export async function crearPerfil(
     email,
     rol,
     universidad_id: universidadId,
+    programa_id: programaId,
     curso_id: cursoId,
+    grupo_id: grupoId,
     usuario_id: usuarioId,
     activo: true,
+    modulos: modulosDelFormulario(formulario),
   })
 
   if (ePerfil) {
@@ -94,6 +118,53 @@ export async function crearPerfil(
 
   revalidatePath('/admin/perfiles')
   return { ok: `Perfil de ${nombre} creado como ${rol}.` }
+}
+
+/**
+ * Cambia los módulos visibles de un perfil existente.
+ *
+ * Sólo toca qué PANTALLAS ve: el alcance de datos no se modifica aquí y
+ * sigue decidiendo qué información aparece dentro de cada una.
+ */
+export async function guardarModulos(
+  _previo: EstadoPerfil,
+  formulario: FormData
+): Promise<EstadoPerfil> {
+  const { perfil } = await exigirRol(['admin'])
+
+  const id = Number(formulario.get('id'))
+  if (!Number.isInteger(id) || id <= 0) return { error: 'Perfil no válido.' }
+
+  const modulos = modulosDelFormulario(formulario)
+  if (modulos === null) return { error: 'No se recibió la selección de módulos.' }
+
+  // Un administrador que se quita a sí mismo la administración no podría
+  // volver a entrar a esta pantalla para deshacerlo.
+  if (id === perfil.id && !modulos.some((m) => m === '/admin' || m.startsWith('/admin/'))) {
+    return {
+      error:
+        'No puedes quitarte a ti mismo el módulo de Administración: ' +
+        'perderías el acceso a esta pantalla y nadie podría devolvértelo desde aquí.',
+    }
+  }
+
+  const db = clienteServidor()
+  const { error } = await db.from('perfiles').update({ modulos }).eq('id', id)
+
+  if (error) {
+    if (error.code === 'PGRST204' || error.code === '42703') {
+      return {
+        error:
+          'Falta la columna atlas.perfiles.modulos. Aplica la migración ' +
+          'supabase/migraciones/07_permisos_modulos.sql desde el SQL Editor.',
+      }
+    }
+    return { error: `No se pudieron guardar los módulos: ${error.message}` }
+  }
+
+  revalidatePath('/admin/perfiles')
+  revalidatePath('/', 'layout')
+  return { ok: `Módulos actualizados (${modulos.length}).` }
 }
 
 export async function alternarActivo(formulario: FormData) {

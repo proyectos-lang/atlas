@@ -1,6 +1,7 @@
 'use client'
 
 import { BotonEnvio } from '@/componentes/ui/boton-envio'
+import { SelectorModulos, type GrupoModulos } from '@/componentes/selector-modulos'
 import { useActionState, useState } from 'react'
 import { crearPerfil, type EstadoPerfil } from './acciones'
 
@@ -8,12 +9,20 @@ interface Opcion { id: number; etiqueta: string }
 
 export function FormularioPerfil({
   universidades,
+  programas,
   cursos,
+  gruposCurso,
   estudiantes,
+  grupos,
+  modulosPorRol,
 }: {
   universidades: Opcion[]
+  programas: Opcion[]
   cursos: Opcion[]
+  gruposCurso: Opcion[]
   estudiantes: Opcion[]
+  grupos: GrupoModulos[]
+  modulosPorRol: Record<string, string[]>
 }) {
   const [estado, accion] = useActionState<EstadoPerfil, FormData>(crearPerfil, {})
   const [rol, setRol] = useState('docente')
@@ -82,6 +91,24 @@ export function FormularioPerfil({
         </div>
       )}
 
+      {pideUniversidad && programas.length > 0 && (
+        <div>
+          <label className="block text-sm font-medium text-slate-700">
+            Programa <span className="font-normal text-texto-secundario">(opcional)</span>
+          </label>
+          <select name="programa_id" className={campo} defaultValue="">
+            <option value="">Toda la universidad</option>
+            {programas.map((p) => (
+              <option key={p.id} value={p.id}>{p.etiqueta}</option>
+            ))}
+          </select>
+          <p className="mt-1 text-xs text-texto-secundario">
+            Con un programa asignado verá <strong>sólo ese programa</strong>, no
+            los demás de su universidad.
+          </p>
+        </div>
+      )}
+
       {pideCurso && (
         <div>
           <label className="block text-sm font-medium text-slate-700">
@@ -93,6 +120,24 @@ export function FormularioPerfil({
               <option key={c.id} value={c.id}>{c.etiqueta}</option>
             ))}
           </select>
+        </div>
+      )}
+
+      {pideCurso && gruposCurso.length > 0 && (
+        <div>
+          <label className="block text-sm font-medium text-slate-700">
+            Grupo <span className="font-normal text-texto-secundario">(opcional)</span>
+          </label>
+          <select name="grupo_id" className={campo} defaultValue="">
+            <option value="">Todo el curso</option>
+            {gruposCurso.map((g) => (
+              <option key={g.id} value={g.id}>{g.etiqueta}</option>
+            ))}
+          </select>
+          <p className="mt-1 text-xs text-texto-secundario">
+            Con un grupo asignado verá <strong>sólo ese grupo</strong>. Es lo que
+            permite que dos docentes compartan curso sin verse.
+          </p>
         </div>
       )}
 
@@ -120,6 +165,21 @@ export function FormularioPerfil({
           {estado.ok}
         </p>
       )}
+
+      <div className="border-t border-superficie-borde pt-4">
+        <span className="block text-sm font-medium text-slate-700">
+          Módulos visibles
+        </span>
+        <p className="mb-2 mt-0.5 text-xs text-texto-secundario">
+          Se marcan los del rol elegido. Puedes añadir o quitar los que quieras.
+        </p>
+        {/* key: al cambiar de rol se remonta con los módulos de ese rol. */}
+        <SelectorModulos
+          key={rol}
+          grupos={grupos}
+          porDefecto={modulosPorRol[rol] ?? []}
+        />
+      </div>
 
       <BotonEnvio enProgreso="Creando…">Crear perfil</BotonEnvio>
     </form>

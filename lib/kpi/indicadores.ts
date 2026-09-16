@@ -33,6 +33,53 @@ const num = (v: unknown): number => {
 const media = (v: number[]) =>
   v.length ? v.reduce((a, b) => a + b, 0) / v.length : null
 
+
+/**
+ * Traduce las dimensiones de jerarquía a una lista de estudiantes.
+ *
+ * Las funciones del motor devuelven `usuario_id` y `curso_id`, pero no
+ * conocen programa ni grupo. En vez de tocar el SQL --y arriesgar los
+ * valores de referencia-- se resuelve aquí qué estudiantes caen dentro del
+ * programa o el grupo pedidos, y se intersecta con `usuarioIds`.
+ *
+ * Devuelve el mismo alcance cuando no hay nada que resolver, para no
+ * consultar la base sin necesidad.
+ */
+export async function resolverJerarquia(alcance: Alcance): Promise<Alcance> {
+  if (alcance.programaIds === null && alcance.grupoIds === null) return alcance
+  if (alcanceVacio(alcance)) return alcance
+
+  const db = clienteServidor()
+  let q = db.from('usuarios').select('id').eq('rol', 'Estudiante')
+
+  if (alcance.grupoIds !== null) {
+    q = q.in('grupo_id', alcance.grupoIds)
+  } else if (alcance.programaIds !== null) {
+    // Sin grupo, el programa se resuelve por sus cursos.
+    const { data: cursosProg, error: eCursos } = await db
+      .from('cursos').select('id').in('programa_id', alcance.programaIds)
+
+    // Columna aún sin migrar: la jerarquía es aditiva, así que se sigue
+    // con el alcance de siempre en vez de devolver cero filas.
+    if (eCursos) {
+      if (eCursos.code === 'PGRST205' || eCursos.code === '42703') return alcance
+      throw new Error(`cursos del programa: ${eCursos.message}`)
+    }
+    q = q.in('curso_id', (cursosProg ?? []).map((c) => Number(c.id)))
+  }
+
+  if (alcance.cursoIds !== null) q = q.in('curso_id', alcance.cursoIds)
+  if (alcance.usuarioIds !== null) q = q.in('id', alcance.usuarioIds)
+
+  const { data, error } = await q
+  if (error) {
+    if (error.code === 'PGRST205' || error.code === '42703') return alcance
+    throw new Error(`resolver jerarquia: ${error.message}`)
+  }
+
+  return { ...alcance, usuarioIds: (data ?? []).map((u) => Number(u.id)) }
+}
+
 /** Índices por estudiante, ya ceñidos al alcance. */
 export async function indicesPorEstudiante(
   alcance: Alcance,

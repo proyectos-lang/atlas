@@ -2,9 +2,12 @@ import { exigirRol } from '@/lib/auth/sesion'
 import { Marco } from '@/componentes/marco'
 import { SubNavAdmin } from '@/componentes/sub-nav-admin'
 import { clienteServidor } from '@/lib/supabase/servidor'
-import { cursos, estudiantes, universidades } from '@/lib/kpi/consultas'
+import { cursos, estudiantes, universidades, programas, grupos as gruposDeCurso } from '@/lib/kpi/consultas'
 import { FormularioPerfil } from './formulario'
 import { alternarActivo } from './acciones'
+import { EditorModulos } from './editor-modulos'
+import { catalogoModulos } from '@/lib/auth/navegacion'
+import { RUTAS_POR_ROL, type Rol } from '@/lib/auth/alcance'
 
 export const metadata = { title: 'Perfiles · ATLAS' }
 
@@ -19,15 +22,25 @@ const NOMBRE_ROL: Record<string, string> = {
 export default async function PaginaPerfiles() {
   const { perfil, alcance } = await exigirRol(['admin'])
 
-  const [listaUniv, listaCursos, listaEst] = await Promise.all([
+  const [listaUniv, listaCursos, listaEst, listaProg, listaGrupos] = await Promise.all([
     universidades(alcance), cursos(alcance), estudiantes(alcance),
+    programas(alcance), gruposDeCurso(alcance),
   ])
 
   const db = clienteServidor()
   const { data: perfiles } = await db
     .from('perfiles')
-    .select('id, nombre, email, rol, universidad_id, curso_id, usuario_id, activo')
+    .select('id, nombre, email, rol, universidad_id, curso_id, usuario_id, activo, modulos')
     .order('id')
+
+  // Catálogo de módulos y el valor por defecto de cada rol, para el selector.
+  const grupos = catalogoModulos().map((g) => ({
+    titulo: g.titulo,
+    items: g.items.map((i) => ({ ruta: i.ruta, etiqueta: i.etiqueta, pie: i.pie })),
+  }))
+  const modulosPorRol = Object.fromEntries(
+    Object.entries(RUTAS_POR_ROL).map(([rol, rutas]) => [rol, [...rutas]])
+  ) as Record<string, string[]>
 
   const nombreUniv = new Map(listaUniv.map((u) => [u.id, u.universidad]))
   const nombreCurso = new Map(listaCursos.map((c) => [c.id, c.nombre]))
@@ -61,6 +74,12 @@ export default async function PaginaPerfiles() {
               id: c.id, etiqueta: `${c.nombre} (${c.codigo})`,
             }))}
             estudiantes={listaEst.map((e) => ({ id: e.id, etiqueta: e.codigo }))}
+            programas={listaProg.map((p) => ({ id: p.id, etiqueta: p.nombre }))}
+            gruposCurso={listaGrupos.map((g) => ({
+              id: g.id, etiqueta: `${g.nombre} (${g.codigo})`,
+            }))}
+            grupos={grupos}
+            modulosPorRol={modulosPorRol}
           />
         </section>
 
@@ -92,6 +111,18 @@ export default async function PaginaPerfiles() {
                     <td className="py-2 pr-3">
                       <div className="font-medium">{String(p.nombre)}</div>
                       <div className="text-xs text-texto-secundario">{String(p.email)}</div>
+                      <EditorModulos
+                        perfilId={Number(p.id)}
+                        nombre={String(p.nombre).split(' ')[0]}
+                        grupos={grupos}
+                        porDefecto={modulosPorRol[String(p.rol)] ?? []}
+                        seleccionActual={
+                          Array.isArray(p.modulos)
+                            ? (p.modulos as string[]).map(String)
+                            : (RUTAS_POR_ROL[p.rol as Rol] ?? []).map(String)
+                        }
+                        personalizado={Array.isArray(p.modulos)}
+                      />
                     </td>
                     <td className="py-2 pr-3">{NOMBRE_ROL[String(p.rol)] ?? String(p.rol)}</td>
                     <td className="py-2 pr-3 text-texto-secundario">{ambitoDe(p as never)}</td>

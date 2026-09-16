@@ -18,6 +18,11 @@ const SECCIONES: readonly { ruta: string; etiqueta: string; pie: string }[] = [
     pie: 'Quién entra y qué alcance tiene',
   },
   {
+    ruta: '/admin/jerarquia',
+    etiqueta: 'Jerarquía académica',
+    pie: 'Programas, cursos y grupos',
+  },
+  {
     ruta: '/admin/perfil-egreso',
     etiqueta: 'Perfil de egreso',
     pie: 'Contexto curricular para el análisis de IA',
