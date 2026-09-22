@@ -77,9 +77,14 @@ const soloCodigo = (texto: string) =>
   texto.split(/\r?\n/).filter((l) => !l.trimStart().startsWith('--')).join('\n')
 
 const EVIDENCIAS = sql('11_evidencias.sql')
-const MOTOR = sql('12_motor_evidencias.sql')
 const EVIDENCIAS_SQL = soloCodigo(EVIDENCIAS)
-const MOTOR_SQL = soloCodigo(MOTOR)
+
+// El motor vive repartido en dos migraciones: la 12 crea las tres
+// funciones y la 13 redefine sólo `calcular_indicador` para corregir el
+// Conteo. Cada aserción se comprueba contra el archivo donde la función
+// que le corresponde está vigente.
+const MOTOR_SQL = soloCodigo(sql('12_motor_evidencias.sql'))
+const CALCULO_SQL = soloCodigo(sql('13_arreglo_conteo.sql'))
 
 describe('ATLAS no depende de una plataforma', () => {
   it('el catálogo incluye fuentes de las siete categorías', () => {
@@ -130,16 +135,16 @@ describe('la evidencia conserva su trazabilidad', () => {
 
 describe('el motor nuevo conserva las cuatro reglas', () => {
   it('regla 2: trunca antes de que nadie promedie', () => {
-    expect(MOTOR_SQL).toContain('least(v_valor, 100)')
+    expect(CALCULO_SQL).toContain('least(v_valor, 100)')
   })
 
   it('regla 3: prorratea cuando el indicador lo declara', () => {
-    expect(MOTOR_SQL).toContain('prorratea')
-    expect(MOTOR_SQL).toContain('v_factor')
+    expect(CALCULO_SQL).toContain('prorratea')
+    expect(CALCULO_SQL).toContain('v_factor')
   })
 
   it('regla 4: los indicadores en puntos no se truncan', () => {
-    expect(MOTOR_SQL).toContain("escala = 'Porcentaje'")
+    expect(CALCULO_SQL).toContain("escala = 'Porcentaje'")
   })
 
   it('regla 1: devuelve una fila por estudiante, sin agregar', () => {
@@ -154,6 +159,7 @@ describe('el motor nuevo conserva las cuatro reglas', () => {
   it('no toca el motor anterior', () => {
     for (const fn of ['kpi_estudiante', 'kpi_indice', 'kpi_ilo', 'kpi_embudo']) {
       expect(MOTOR_SQL.includes(`create or replace function atlas.${fn}`), fn).toBe(false)
+      expect(CALCULO_SQL.includes(`create or replace function atlas.${fn}`), fn).toBe(false)
     }
   })
 })
@@ -175,5 +181,30 @@ describe('las migraciones son seguras de reejecutar', () => {
       expect(EVIDENCIAS_SQL.includes(`alter table ${t}`), t).toBe(false)
       expect(EVIDENCIAS_SQL.includes(`drop table ${t}`), t).toBe(false)
     }
+  })
+})
+
+describe('un conteo sin referencia no produce un número sin escala', () => {
+  // Detectado probando el flujo completo: tres estudiantes con 5, 3 y 1
+  // errores corregidos daban todos 1,0, porque Conteo sin valor esperado
+  // devolvía el número de evidencias en vez de un porcentaje. Mezclado en
+  // el promedio con indicadores 0-100, el valor de la competencia dejaba
+  // de significar nada.
+  it('la función devuelve null en vez del conteo crudo', () => {
+    const bloque = CALCULO_SQL.slice(
+      CALCULO_SQL.indexOf("when 'Conteo' then"),
+      CALCULO_SQL.indexOf("when 'Rubrica' then")
+    )
+    expect(bloque).toContain('then null')
+    expect(bloque).not.toContain('count(*)::numeric')
+  })
+
+  it('la tabla impide guardar un conteo sin valor esperado', () => {
+    expect(CALCULO_SQL).toContain('ck_indicadores_conteo_esperado')
+  })
+
+  it('la migración repara los indicadores ya sembrados', () => {
+    expect(CALCULO_SQL).toContain("where agregacion = 'Conteo'")
+    expect(CALCULO_SQL).toContain('valor_esperado is null')
   })
 })

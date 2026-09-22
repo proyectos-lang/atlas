@@ -40,6 +40,7 @@ Ejecutar **en orden** desde el SQL Editor de Supabase:
 | 10 | `supabase/migraciones/10_seed_competencias.sql` | semilla de competencias e indicadores |
 | 11 | `supabase/migraciones/11_evidencias.sql` | fuentes de datos, mapeos y evidencias |
 | 12 | `supabase/migraciones/12_motor_evidencias.sql` | motor de cálculo configurable |
+| 13 | `supabase/migraciones/13_arreglo_conteo.sql` | corrige el Conteo sin valor esperado |
 
 > La migración 04 depende de que `usuarios` y `semanas` ya tengan datos.
 > Ejecutarla **después** de `npm run seed`.

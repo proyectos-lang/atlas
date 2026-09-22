@@ -182,6 +182,15 @@ export async function crearIndicador(
   if (agregacion === 'Proporcion' && umbral === null) {
     return { error: 'Una proporción necesita un umbral: el corte que separa logro de no logro.' }
   }
+  // Sin referencia, un conteo devuelve un número sin escala que se
+  // mezclaría con los porcentajes y corrompería el valor de la competencia.
+  if (agregacion === 'Conteo' && valorEsperado === null) {
+    return {
+      error:
+        'Un conteo necesita un valor esperado: cuántas evidencias equivalen al 100 %. ' +
+        'Sin él, el indicador no puede compararse con los demás.',
+    }
+  }
 
   const db = clienteServidor()
 

@@ -142,7 +142,7 @@ const AYUDA_AGREGACION: Record<string, string> = {
   Promedio: 'Media de los valores de las evidencias. No necesita nada más.',
   Suma: 'Suma de los valores, dividida entre el valor esperado.',
   Proporcion: 'Cuántas evidencias superan el umbral, sobre el total.',
-  Conteo: 'Número de evidencias registradas.',
+  Conteo: 'Número de evidencias, sobre las que se esperan.',
   Rubrica: 'Suma de lo obtenido sobre suma del máximo posible.',
 }
 
@@ -154,7 +154,7 @@ export function FormularioIndicador({ dimensiones }: { dimensiones: OpcionSimple
     return <p className="text-sm text-texto-secundario">No hay dimensiones configuradas.</p>
   }
 
-  const pideEsperado = agregacion === 'Suma'
+  const pideEsperado = agregacion === 'Suma' || agregacion === 'Conteo'
   const pideUmbral = agregacion === 'Proporcion'
 
   return (
