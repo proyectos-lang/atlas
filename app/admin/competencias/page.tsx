@@ -27,7 +27,7 @@ const ETIQUETA_AGREGACION: Record<string, string> = {
 }
 
 export default async function PaginaCompetencias() {
-  const { perfil, alcance } = await exigirRol(['admin'])
+  const { perfil, alcance } = await exigirRol(['admin', 'coordinador'])
 
   const arbol = await arbolCompetencias(alcance)
   const faltaModelo = arbol.length === 0

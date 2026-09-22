@@ -57,9 +57,12 @@ export const INICIO_POR_ROL: Record<Rol, string> = {
 /** Rutas que cada rol puede visitar. */
 export const RUTAS_POR_ROL: Record<Rol, readonly string[]> = {
   admin: ['/inicio', '/analitica', '/intervenciones', '/administrador', '/coordinador', '/asesor', '/docente', '/estudiante', '/analisis', '/admin', '/componentes', '/recomendador', '/acerca-de'],
-  coordinador: ['/inicio', '/analitica', '/intervenciones', '/coordinador', '/asesor', '/docente', '/estudiante', '/analisis', '/recomendador', '/acerca-de'],
-  asesor: ['/inicio', '/analitica', '/intervenciones', '/asesor', '/analisis', '/recomendador', '/acerca-de'],
-  docente: ['/inicio', '/analitica', '/intervenciones', '/docente', '/analisis', '/acerca-de'],
+  // El coordinador configura el currículo de su programa; el docente, la
+  // ficha de su asignatura. Lo que cada uno VE dentro lo sigue limitando
+  // el Alcance: conceder la pantalla no amplía los datos.
+  coordinador: ['/inicio', '/analitica', '/intervenciones', '/coordinador', '/asesor', '/docente', '/estudiante', '/analisis', '/recomendador', '/acerca-de', '/admin/curriculo', '/admin/competencias', '/admin/jerarquia', '/admin/perfil-egreso'],
+  asesor: ['/inicio', '/analitica', '/intervenciones', '/asesor', '/analisis', '/recomendador', '/acerca-de', '/admin/curriculo'],
+  docente: ['/inicio', '/analitica', '/intervenciones', '/docente', '/analisis', '/acerca-de', '/admin/curriculo', '/admin/fuentes'],
   estudiante: ['/inicio', '/estudiante', '/acerca-de'],
 }
 

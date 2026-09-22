@@ -50,11 +50,24 @@ const GRUPOS: readonly { titulo: string; items: readonly ItemNav[] }[] = [
     ],
   },
   {
+    // Las secciones de configuración van una a una, no tras un enlace
+    // genérico a /admin: escondidas detrás de «Administración» nadie las
+    // encontraba, porque la sub-navegación sólo aparece una vez dentro.
     titulo: 'Configuración',
     items: [
-      { ruta: '/admin', etiqueta: 'Administración', pie: 'Perfiles y perfil de egreso', icono: 'ajustes' },
-      { ruta: '/componentes', etiqueta: 'Galería de componentes', pie: 'Referencia visual', icono: 'galeria' },
+      { ruta: '/admin/curriculo', etiqueta: 'Modelo curricular', pie: 'Macro, meso, micro y resultados', icono: 'programa' },
+      { ruta: '/admin/competencias', etiqueta: 'Competencias', pie: 'Dimensiones e indicadores', icono: 'analisis' },
+      { ruta: '/admin/fuentes', etiqueta: 'Fuentes de datos', pie: 'De dónde vienen las evidencias', icono: 'ajustes' },
+      { ruta: '/admin/jerarquia', etiqueta: 'Jerarquía académica', pie: 'Programas, cursos y grupos', icono: 'institucion' },
+      { ruta: '/admin/perfil-egreso', etiqueta: 'Perfil de egreso', pie: 'Contexto para el análisis de IA', icono: 'ayuda' },
+      { ruta: '/admin/perfiles', etiqueta: 'Perfiles de acceso', pie: 'Quién entra y qué ve', icono: 'persona' },
+    ],
+  },
+  {
+    titulo: 'Referencia',
+    items: [
       { ruta: '/acerca-de', etiqueta: 'Acerca de los indicadores', pie: 'Cómo se calcula cada cifra', icono: 'ayuda' },
+      { ruta: '/componentes', etiqueta: 'Galería de componentes', pie: 'Referencia visual', icono: 'galeria' },
     ],
   },
 ]
@@ -70,15 +83,20 @@ export function navegacionDe(
 ): GrupoNav[] {
   // Acepta el rol suelto para las pruebas y los sitios donde no hay perfil;
   // cuando lo hay, manda lo que el administrador configuró.
-  const permitidas = new Set(
+  const permitidas =
     typeof perfilORol === 'string'
       ? RUTAS_POR_ROL[perfilORol]
       : modulosDe(perfilORol)
-  )
+
+  // Una ruta concedida habilita sus subrutas, igual que en `puedeVer`.
+  // Comparar por igualdad exacta escondía el grupo de Configuración
+  // entero: el administrador tiene `/admin`, no `/admin/curriculo`.
+  const visible = (ruta: string) =>
+    permitidas.some((p) => ruta === p || ruta.startsWith(`${p}/`))
 
   return GRUPOS.map((g) => ({
     titulo: g.titulo,
-    items: g.items.filter((i) => permitidas.has(i.ruta)),
+    items: g.items.filter((i) => visible(i.ruta)),
   })).filter((g) => g.items.length > 0)
 }
 
@@ -97,11 +115,23 @@ export function etiquetaModulo(ruta: string): string {
 }
 
 /**
+ * Rutas que existen para dar acceso, pero que no son destino propio: sólo
+ * redirigen a una de sus subrutas. No aparecen en el menú porque no hay
+ * nada que mostrar en ellas.
+ *
+ * `/admin` concede acceso a todas las secciones de configuración, que sí
+ * tienen su ítem cada una.
+ */
+const RUTAS_PUENTE = new Set(['/admin'])
+
+/**
  * Rutas que el rol puede ver pero que ningún grupo recoge. Sin esto, añadir
  * una ruta a RUTAS_POR_ROL y olvidarla aquí la haría desaparecer del menú
  * sin que nada avise.
  */
 export function rutasHuerfanas(rol: Rol): string[] {
   const enGrupos = new Set(GRUPOS.flatMap((g) => g.items.map((i) => i.ruta)))
-  return RUTAS_POR_ROL[rol].filter((r) => !enGrupos.has(r))
+  return RUTAS_POR_ROL[rol].filter(
+    (r) => !enGrupos.has(r) && !RUTAS_PUENTE.has(r)
+  )
 }

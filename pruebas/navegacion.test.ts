@@ -60,10 +60,23 @@ describe('el panel de inicio es alcanzable', () => {
     expect(puedeVer('asesor', '/admin')).toBe(false)
   })
 
-  it('sólo admin entra en configuración', () => {
+  it('la configuración se reparte según quién conoce cada nivel', () => {
+    // El coordinador configura el currículo de su programa; el docente, la
+    // ficha de su asignatura y sus fuentes. Conceder la PANTALLA no amplía
+    // los DATOS: eso lo sigue limitando el Alcance.
+    expect(puedeVer('coordinador', '/admin/curriculo')).toBe(true)
+    expect(puedeVer('docente', '/admin/curriculo')).toBe(true)
+    expect(puedeVer('docente', '/admin/fuentes')).toBe(true)
+
+    // Los perfiles de acceso siguen siendo sólo del administrador: quien
+    // puede crear cuentas puede concederse cualquier cosa.
     for (const rol of ROLES) {
-      expect(puedeVer(rol, '/admin/perfil-egreso'), `${rol}`).toBe(rol === 'admin')
+      expect(puedeVer(rol, '/admin/perfiles'), `${rol} en perfiles`).toBe(rol === 'admin')
     }
+
+    // El estudiante no configura nada.
+    expect(puedeVer('estudiante', '/admin/curriculo')).toBe(false)
+    expect(puedeVer('estudiante', '/admin/fuentes')).toBe(false)
   })
 })
 
@@ -75,10 +88,18 @@ describe('cada rol tiene navegación utilizable', () => {
     }
   })
 
-  it('el número de ítems coincide con las rutas permitidas', () => {
+  it('cada ruta permitida aparece en el menú, salvo las de paso', () => {
+    // `/admin` sólo redirige a sus subsecciones, que sí tienen ítem
+    // propio; no es un destino con contenido.
+    const PUENTE = ['/admin']
+
     for (const rol of ROLES) {
-      const total = navegacionDe(rol).reduce((t, g) => t + g.items.length, 0)
-      expect(total, `${rol}`).toBe(RUTAS_POR_ROL[rol].length)
+      const enMenu = navegacionDe(rol).flatMap((g) => g.items.map((i) => i.ruta))
+      const esperadas = RUTAS_POR_ROL[rol].filter((r) => !PUENTE.includes(r))
+
+      for (const r of esperadas) {
+        expect(enMenu, `${rol}: ${r} no está en el menú`).toContain(r)
+      }
     }
   })
 })
