@@ -93,6 +93,22 @@ Anclajes de la semilla de rúbrica (1296 filas):
 | NIA | 898 | 1296 | 69,29 % |
 | UEA | 616 | 864 | 71,30 % |
 
+## Tableros por rol
+
+Cada tablero añade un **panel de competencias por dimensión** sobre sus
+gráficos existentes, sin reemplazarlos. Dice qué dimensión concreta falla, no
+sólo cuánto: «Depuración 35 %» es accionable; «Resolución de Problemas 62 %»
+obliga a adivinar dónde está el problema.
+
+Los gráficos anteriores siguen leyendo del motor verificado, así que las
+cifras de referencia no se mueven. El panel nuevo se calcula sobre evidencias
+y aparece vacío mientras no las haya — con un aviso que lo explica, no con
+ceros que mentirían.
+
+Cuando una dimensión falla en más del 40 % del grupo, el panel lo marca en vez
+de mostrar sólo el promedio: es la diferencia entre un problema de enseñanza y
+uno individual.
+
 ## El ciclo de mejora
 
 ```

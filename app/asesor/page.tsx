@@ -1,4 +1,6 @@
 import { exigirSesion } from '@/lib/auth/sesion'
+import { descriptiva, diagnostica } from '@/lib/analitica/modelo'
+import { PanelCompetencias, resumirCompetencias } from '@/componentes/panel-competencias'
 import { Pagina, SinResultados } from '@/componentes/pagina'
 import { AvisoDatosSemilla, FilaTarjetas, PanelSinSeguimiento } from '@/componentes/fila-tarjetas'
 import { resolverFiltros, seleccionDe } from '@/lib/kpi/filtros'
@@ -85,9 +87,21 @@ export default async function PaginaAsesor({
     { etiqueta: 'Resolución de Problemas', ...cuenta('irp') },
   ].filter((a) => !f.competencia || a.etiqueta === f.competencia)
 
+  // Analítica sobre el modelo de dimensiones, aparte de las consultas ya
+  // verificadas de este tablero.
+  const [desc, diag] = await Promise.all([
+    descriptiva(f.alcance, f.semanas),
+    diagnostica(f.alcance, f.semanas),
+  ])
+  const resumen = resumirCompetencias(desc, diag)
+
   return (
     <Pagina perfil={perfil} titulo="Asesor Pedagógico" controles={f.controles}>
       <div className="space-y-5">
+        <PanelCompetencias
+          resumen={resumen}
+          pie="Dónde se concentran las dificultades, para decidir dónde intervenir."
+        />
         <FilaTarjetas conteos={c} ctg={i.ctg} ilra={ilo.ilra} />
 
         {/* §11.2: aviso visible cuando el ámbito incluye datos semilla. */}

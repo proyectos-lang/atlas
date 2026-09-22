@@ -1,4 +1,6 @@
 import { exigirSesion } from '@/lib/auth/sesion'
+import { descriptiva, diagnostica } from '@/lib/analitica/modelo'
+import { PanelCompetencias, resumirCompetencias } from '@/componentes/panel-competencias'
 import { Pagina, SinResultados } from '@/componentes/pagina'
 import { resolverFiltros, seleccionDe } from '@/lib/kpi/filtros'
 import { alcanceVacio, aplicarFiltros } from '@/lib/auth/alcance'
@@ -54,12 +56,24 @@ export default async function PaginaEstudiante({
     evolucionSemanal(ambito),
   ])
 
+  // Analítica sobre el modelo de dimensiones. Va aparte del Promise.all
+  // anterior para no tocar las consultas ya verificadas de este tablero.
+  const [desc, diag] = await Promise.all([
+    descriptiva(f.alcance, f.semanas),
+    diagnostica(f.alcance, f.semanas),
+  ])
+  const resumen = resumirCompetencias(desc, diag)
+
   const valores = [i.ite, i.iau, i.icom, i.ipc, i.irp]
   const titulo = elegido ? `Mi progreso · ${elegido.codigo}` : 'Promedio del curso'
 
   return (
     <Pagina perfil={perfil} titulo="Estudiante" controles={f.controles}>
       <div className="space-y-5">
+        <PanelCompetencias
+          resumen={resumen}
+          pie="En qué se apoya cada competencia y dónde está tu margen de mejora."
+        />
         {/* Encabezado */}
         <div className="rounded-tarjeta border border-superficie-borde bg-white p-5">
           <div className="flex flex-wrap items-center justify-between gap-4">
