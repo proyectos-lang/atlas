@@ -89,12 +89,35 @@ export async function exigirSesion(ruta?: string): Promise<{
   return { perfil, alcance: alcanceDe(perfil) }
 }
 
-/** Exige un rol concreto; si no, redirige a su inicio. */
-export async function exigirRol(roles: readonly Rol[]): Promise<{
+/**
+ * Exige un rol concreto, o que el administrador haya concedido la ruta.
+ *
+ * `ruta` es lo que arregla una incoherencia que se veía desde la interfaz:
+ * el menú mostraba un enlace porque el PERFIL tenía ese módulo concedido,
+ * y la página lo rechazaba porque su ROL no estaba en la lista. El usuario
+ * pulsaba y volvía al inicio sin explicación.
+ *
+ * Con `ruta`, un módulo concedido a mano pesa más que la lista de roles:
+ * es lo que el administrador decidió para esa persona en concreto. Sin
+ * `ruta`, se comporta como antes y sólo mira el rol.
+ */
+export async function exigirRol(
+  roles: readonly Rol[],
+  ruta?: string
+): Promise<{
   perfil: Perfil
   alcance: Alcance
 }> {
   const { perfil, alcance } = await exigirSesion()
-  if (!roles.includes(perfil.rol)) redirect(inicioDe(perfil) ?? '/sin-acceso')
+
+  const porRol = roles.includes(perfil.rol)
+  // Sólo cuenta si el administrador personalizó los módulos de ESTE
+  // perfil: `modulos` en null significa «usa los de su rol», y entonces
+  // la concesión no añadiría nada que el rol no diera ya.
+  const concedido =
+    ruta !== undefined && perfil.modulos !== null && perfilPuedeVer(perfil, ruta)
+
+  if (!porRol && !concedido) redirect(inicioDe(perfil) ?? '/sin-acceso')
+
   return { perfil, alcance }
 }

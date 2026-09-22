@@ -16,7 +16,7 @@ export const metadata = { title: 'Jerarquía académica · ATLAS' }
  * un curso sólo cambia bajo qué rama aparece.
  */
 export default async function PaginaJerarquia() {
-  const { perfil, alcance } = await exigirRol(['admin', 'coordinador'])
+  const { perfil, alcance } = await exigirRol(['admin', 'coordinador'], '/admin/jerarquia')
 
   const [listaUniv, listaProg, listaCursos, listaGrupos] = await Promise.all([
     universidades(alcance),

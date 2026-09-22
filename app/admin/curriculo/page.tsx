@@ -41,7 +41,7 @@ async function leer(tabla: string, columnas: string): Promise<Fila[]> {
 }
 
 export default async function PaginaCurriculo() {
-  const { perfil, alcance } = await exigirRol(['admin', 'coordinador', 'asesor', 'docente'])
+  const { perfil, alcance } = await exigirRol(['admin', 'coordinador', 'asesor', 'docente'], '/admin/curriculo')
 
   const [
     listaUniv, listaProg, listaCursos, arbol, listaAreas, listaResultados,

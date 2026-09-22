@@ -20,7 +20,7 @@ const COLOR: Record<string, string> = {
 }
 
 export default async function PaginaRevision() {
-  const { perfil, alcance } = await exigirRol(['docente', 'admin', 'coordinador'])
+  const { perfil, alcance } = await exigirRol(['docente', 'admin', 'coordinador'], '/docente/revision')
   const db = clienteServidor()
 
   let q = db.from('recomendaciones_ia')

@@ -19,7 +19,7 @@ interface FilaEgreso {
 }
 
 export default async function PaginaPerfilEgreso() {
-  const { perfil, alcance } = await exigirRol(['admin', 'coordinador'])
+  const { perfil, alcance } = await exigirRol(['admin', 'coordinador'], '/admin/perfil-egreso')
 
   const listaUniv = await universidades(alcance)
 

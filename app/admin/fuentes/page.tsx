@@ -28,7 +28,7 @@ const ORDEN_CATEGORIA: CategoriaFuente[] = [
 ]
 
 export default async function PaginaFuentes() {
-  const { perfil, alcance } = await exigirRol(['admin', 'docente', 'coordinador'])
+  const { perfil, alcance } = await exigirRol(['admin', 'docente', 'coordinador'], '/admin/fuentes')
 
   const [listaFuentes, listaMapeos, listaCursos, arbol] = await Promise.all([
     fuentes(),

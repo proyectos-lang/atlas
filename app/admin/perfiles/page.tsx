@@ -20,7 +20,7 @@ const NOMBRE_ROL: Record<string, string> = {
 }
 
 export default async function PaginaPerfiles() {
-  const { perfil, alcance } = await exigirRol(['admin'])
+  const { perfil, alcance } = await exigirRol(['admin'], '/admin/perfiles')
 
   const [listaUniv, listaCursos, listaEst, listaProg, listaGrupos] = await Promise.all([
     universidades(alcance), cursos(alcance), estudiantes(alcance),

@@ -19,7 +19,7 @@ const COLOR_ESTADO: Record<string, string> = {
 }
 
 export default async function PaginaRecomendador() {
-  const { perfil, alcance } = await exigirRol(['asesor', 'admin', 'coordinador'])
+  const { perfil, alcance } = await exigirRol(['asesor', 'admin', 'coordinador'], '/recomendador')
 
   const [listaUniv, listaCursos, listaEst, porEst] = await Promise.all([
     universidades(alcance),

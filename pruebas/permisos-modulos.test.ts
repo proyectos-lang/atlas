@@ -150,3 +150,50 @@ describe('el alcance de datos no se toca', () => {
     expect(conTodo.rol).toBe('docente')
   })
 })
+
+describe('el menú y las páginas no pueden contradecirse', () => {
+  /**
+   * Reportado al usar la aplicación: un docente con `/recomendador`
+   * concedido veía el enlace en el menú, lo pulsaba y volvía al inicio
+   * sin explicación.
+   *
+   * Había dos sistemas de permisos que no se hablaban: el menú miraba los
+   * MÓDULOS del perfil, y la página su propia lista de ROLES. Un enlace
+   * visible que rechaza al entrar es peor que no mostrarlo.
+   */
+  const conModulos = (rol: Rol, modulos: string[]) => perfil(rol, modulos)
+
+  it('si el módulo está concedido, la ruta es visitable aunque el rol no la traiga', () => {
+    const p = conModulos('docente', ['/inicio', '/recomendador'])
+
+    // El rol no la trae...
+    expect(puedeVer('docente', '/recomendador')).toBe(false)
+    // ...pero el perfil sí, y eso es lo que manda.
+    expect(perfilPuedeVer(p, '/recomendador')).toBe(true)
+  })
+
+  it('todo lo que el menú muestra, el perfil puede verlo', () => {
+    // Es la invariante que se rompió: el menú listaba algo inalcanzable.
+    const casos: [Rol, string[]][] = [
+      ['docente', ['/inicio', '/recomendador', '/acerca-de']],
+      ['estudiante', ['/inicio', '/analitica']],
+      ['asesor', ['/inicio', '/admin/curriculo']],
+    ]
+
+    for (const [rol, modulos] of casos) {
+      const p = conModulos(rol, modulos)
+      for (const g of navegacionDe(p)) {
+        for (const i of g.items) {
+          expect(perfilPuedeVer(p, i.ruta), `${rol}: ${i.ruta} visible pero no visitable`).toBe(true)
+        }
+      }
+    }
+  })
+
+  it('un módulo NO concedido sigue sin ser visitable', () => {
+    // La corrección no debe abrir nada de más.
+    const p = conModulos('docente', ['/inicio', '/docente'])
+    expect(perfilPuedeVer(p, '/recomendador')).toBe(false)
+    expect(perfilPuedeVer(p, '/admin/perfiles')).toBe(false)
+  })
+})
