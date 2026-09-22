@@ -38,6 +38,8 @@ Ejecutar **en orden** desde el SQL Editor de Supabase:
 | 8 | `supabase/migraciones/08_jerarquia.sql` | programas, grupos y alcance jerárquico |
 | 9 | `supabase/migraciones/09_curriculo.sql` | modelo curricular macro-meso-micro |
 | 10 | `supabase/migraciones/10_seed_competencias.sql` | semilla de competencias e indicadores |
+| 11 | `supabase/migraciones/11_evidencias.sql` | fuentes de datos, mapeos y evidencias |
+| 12 | `supabase/migraciones/12_motor_evidencias.sql` | motor de cálculo configurable |
 
 > La migración 04 depende de que `usuarios` y `semanas` ya tengan datos.
 > Ejecutarla **después** de `npm run seed`.
@@ -86,6 +88,49 @@ Anclajes de la semilla de rúbrica (1296 filas):
 | TD | 850 | 1080 | 78,70 % |
 | NIA | 898 | 1296 | 69,29 % |
 | UEA | 616 | 864 | 71,30 % |
+
+## Fuentes de datos y evidencias
+
+**El LMS es una fuente más, no un requisito.** Un curso presencial sin
+ninguna herramienta digital registra evidencias por observación del docente y
+produce los mismos indicadores que uno con Moodle.
+
+```
+fuente → dato → evidencia → indicador → competencia → resultado de aprendizaje
+```
+
+Se administra en **Administración → Fuentes de datos**. Dieciocho fuentes
+sembradas en siete categorías: LMS, herramientas colaborativas, repositorios
+de código, formularios, instrumentos pedagógicos, observación docente y
+archivos estructurados.
+
+`mapeos` declara qué variable de una fuente alimenta qué indicador, y con qué
+transformación. Es lo que permite añadir una herramienta nueva sin tocar la
+arquitectura: `GitHub · contribuciones → Participación → Trabajo en Equipo`.
+
+`evidencias` es la tabla central. Cada fila conserva el **valor bruto** además
+del transformado, para poder auditar la transformación o rehacerla si el
+mapeo cambia. Toda carga masiva deja un lote reversible: un archivo mal
+mapeado se revierte entero en vez de quedar mezclado con el resto.
+
+Dos formas de ingreso: integración por API para las fuentes que la tienen, y
+carga estructurada para el resto. La carga es **todo o nada** — si alguna fila
+falla no se guarda ninguna y se listan los errores.
+
+### El motor configurable
+
+`atlas.calcular_indicador()` decide el cálculo leyendo la definición del
+indicador, en vez de tener la fórmula escrita: promedio, suma sobre un valor
+esperado, proporción sobre un umbral, conteo o rúbrica.
+
+**Conserva las cuatro reglas** del motor anterior, porque no son detalles de
+implementación sino decisiones metodológicas. La diferencia es que ahora cada
+indicador decide si se trunca y si se prorratea.
+
+**Convive con `kpi_estudiante()`, no lo reemplaza.** Mientras no haya
+evidencias cargadas, las cifras verificadas las sigue produciendo el motor
+anterior. Un indicador sin evidencias no devuelve 0 — devuelve nada, porque un
+0 afirmaría que el estudiante fue medido y obtuvo cero.
 
 ## Modelo curricular
 

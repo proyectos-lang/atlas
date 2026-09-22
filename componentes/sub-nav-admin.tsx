@@ -28,6 +28,11 @@ const SECCIONES: readonly { ruta: string; etiqueta: string; pie: string }[] = [
     pie: 'Dimensiones y cómo se miden',
   },
   {
+    ruta: '/admin/fuentes',
+    etiqueta: 'Fuentes de datos',
+    pie: 'De dónde vienen las evidencias',
+  },
+  {
     ruta: '/admin/perfil-egreso',
     etiqueta: 'Perfil de egreso',
     pie: 'Contexto curricular para el análisis de IA',
