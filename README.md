@@ -43,6 +43,7 @@ Ejecutar **en orden** desde el SQL Editor de Supabase:
 | 13 | `supabase/migraciones/13_arreglo_conteo.sql` | corrige el Conteo sin valor esperado |
 | 14 | `supabase/migraciones/14_analitica.sql` | analítica descriptiva, diagnóstica y predictiva |
 | 15 | `supabase/migraciones/15_arreglo_senales.sql` | corrige señales con ruido y clasificación |
+| 16 | `supabase/migraciones/16_intervenciones.sql` | recomendación sobre dimensiones e intervenciones |
 
 > La migración 04 depende de que `usuarios` y `semanas` ya tengan datos.
 > Ejecutarla **después** de `npm run seed`.
@@ -91,6 +92,37 @@ Anclajes de la semilla de rúbrica (1296 filas):
 | TD | 850 | 1080 | 78,70 % |
 | NIA | 898 | 1296 | 69,29 % |
 | UEA | 616 | 864 | 71,30 % |
+
+## El ciclo de mejora
+
+```
+datos → analítica → recomendación → intervención → nueva evidencia → nueva analítica
+```
+
+En `/intervenciones`. Registrar qué se hizo es lo que permite saber si
+funcionó: sin ese paso la analítica describe el problema pero nadie sabe qué
+se intentó ni con qué resultado.
+
+Una intervención puede nacer de una recomendación de la IA o del criterio del
+docente — el ciclo no empieza necesariamente en el agente.
+
+**El valor del indicador se captura al registrar, no al cerrar.** Tomarlo
+después ya estaría contaminado por el efecto que se quiere medir. Las
+evidencias se marcan `Antes` o `Despues`, y `efecto_intervencion()` compara
+ambos lados **sin decidir si funcionó**: devuelve el cambio y cuántas
+evidencias lo sostienen, para que el docente juzgue. Un salto de 20 puntos
+medido con una evidencia no dice lo mismo que uno de 5 con quince.
+
+### El recomendador sobre dimensiones
+
+`lib/ia/agente-dimensiones.ts` recibe la dificultad concreta, no un índice
+general: «Depuración: 35 %, 4 de 6 del grupo también fallan». El agente
+anterior recibía «Índice de Resolución de Problemas: 62 %» y tenía que
+adivinar qué hacer.
+
+El patrón —individual o del grupo— lo decide la analítica, no el agente. Si lo
+decidiera dos veces podrían discrepar, y la analítica diría «del grupo»
+mientras el agente propone algo individual.
 
 ## Analítica
 

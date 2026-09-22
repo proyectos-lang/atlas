@@ -45,6 +45,7 @@ const GRUPOS: readonly { titulo: string; items: readonly ItemNav[] }[] = [
       { ruta: '/analitica', etiqueta: 'Analítica', pie: 'Dificultades y riesgo', icono: 'analisis' },
       { ruta: '/analisis', etiqueta: 'Catálogo de indicadores', pie: 'Qué mide cada uno', icono: 'analisis' },
       { ruta: '/recomendador', etiqueta: 'Recomendaciones', pie: 'Generadas por el agente', icono: 'ia' },
+      { ruta: '/intervenciones', etiqueta: 'Intervenciones', pie: 'Qué se hizo y qué cambió', icono: 'revision' },
       { ruta: '/docente/revision', etiqueta: 'Revisión docente', pie: 'Aprobar o rechazar', icono: 'revision' },
     ],
   },

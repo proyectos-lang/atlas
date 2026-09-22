@@ -143,11 +143,30 @@ async function principal() {
         .every((f) => Array.isArray(f.senales) && (f.senales as string[]).length > 0))
 
     // El fallo que corrigió la migración 15: la cobertura se emitía como
-    // señal de riesgo en todos los estudiantes y ahogaba a las demás.
-    const conRuido = dPred.filter((f) => String(f.riesgo) === 'Bajo')
-      .filter((f) => ((f.senales ?? []) as string[]).length > 0)
-    comprobar('un estudiante sin riesgo no arrastra senales',
+    // señal DE RIESGO en todos los estudiantes y ahogaba a las demás.
+    //
+    // El aviso de fiabilidad sí puede aparecer en un riesgo Bajo, y debe:
+    // con dos dimensiones medidas de veinticinco, afirmar que alguien
+    // está bien tampoco se sostiene. Lo que no debe pasar es que un
+    // estudiante sin problemas arrastre señales SOBRE SU DESEMPEÑO.
+    const senalesDeDesempeno = (f: Fila) =>
+      ((f.senales ?? []) as string[])
+        .filter((s) => !s.startsWith('Diagnostico poco fiable'))
+
+    const conRuido = dPred
+      .filter((f) => String(f.riesgo) === 'Bajo')
+      .filter((f) => senalesDeDesempeno(f).length > 0)
+    comprobar('un estudiante sin riesgo no arrastra senales de desempeno',
       conRuido.length === 0, `${conRuido.length} con senales`)
+
+    // Y la de fiabilidad aparece cuando toca, sea cual sea el riesgo.
+    const pocaCobertura = dPred.filter((f) =>
+      f.cobertura !== null && Number(f.cobertura) < 0.3)
+    comprobar('con cobertura baja se avisa de que el diagnostico no es fiable',
+      pocaCobertura.every((f) =>
+        ((f.senales ?? []) as string[])
+          .some((s) => s.startsWith('Diagnostico poco fiable'))),
+      `${pocaCobertura.length} con cobertura < 30 %`)
 
     comprobar('la cobertura se informa, para saber sobre cuanto se afirma',
       dPred.every((f) => f.cobertura !== undefined))
