@@ -202,18 +202,28 @@ export async function indicadores(dimensionIds?: number[]): Promise<Indicador[]>
   }))
 }
 
-export async function resultados(filtro: {
-  programaIds?: number[] | null
+/**
+ * Resultados de aprendizaje del alcance.
+ *
+ * El filtrado se hace en memoria y no con `.in()` por una razón: un
+ * resultado de curso tiene `programa_id` nulo, así que filtrar por
+ * programa en la consulta lo dejaría fuera. Hay que decidir por el
+ * ámbito de cada fila cuál es su referencia.
+ *
+ * `alcance` es obligatorio. Sin él, un coordinador vería los resultados
+ * de programas ajenos.
+ */
+export async function resultados(
+  alcance: Alcance,
   cursoIds?: number[] | null
-} = {}): Promise<Resultado[]> {
+): Promise<Resultado[]> {
+  if (alcanceVacio(alcance)) return []
+
   const db = clienteServidor()
-  let q = db
+  const q = db
     .from('resultados')
     .select('id, codigo, enunciado, ambito, programa_id, area_id, curso_id, competencia_id, activo, orden')
     .order('orden')
-
-  if (filtro.programaIds) q = q.in('programa_id', filtro.programaIds)
-  if (filtro.cursoIds) q = q.in('curso_id', filtro.cursoIds)
 
   const { data, error } = await q
   if (error) {
@@ -221,7 +231,29 @@ export async function resultados(filtro: {
     throw new Error(`resultados: ${error.message}`)
   }
 
-  return ((data ?? []) as unknown as Fila[]).map((r) => ({
+  const cursosPermitidos = cursoIds ?? alcance.cursoIds
+
+  return ((data ?? []) as unknown as Fila[])
+    .filter((r) => {
+      // Un resultado de programa se ciñe por programa; uno de curso, por
+      // curso. Aplicar el filtro equivocado los haría desaparecer.
+      if (r.ambito === 'Programa') {
+        return (
+          alcance.programaIds === null ||
+          (r.programa_id != null && alcance.programaIds.includes(Number(r.programa_id)))
+        )
+      }
+      if (r.ambito === 'Curso') {
+        return (
+          cursosPermitidos === null ||
+          (r.curso_id != null && cursosPermitidos.includes(Number(r.curso_id)))
+        )
+      }
+      // Los de área no tienen referencia directa al alcance: se muestran
+      // cuando el alcance no restringe programas.
+      return alcance.programaIds === null || alcance.programaIds.length > 0
+    })
+    .map((r) => ({
     id: Number(r.id),
     codigo: String(r.codigo),
     enunciado: String(r.enunciado),

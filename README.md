@@ -213,7 +213,14 @@ Institución → Facultad → Programa              (macro)
         → Dimensión → Indicador
 ```
 
-Se administra en **Administración → Competencias e indicadores**.
+Se administra en dos pantallas: **Administración → Modelo curricular** para
+los tres niveles y los resultados de aprendizaje, y **Competencias e
+indicadores** para la medición.
+
+Los **resultados de aprendizaje** son el eslabón central: enlazados a los
+indicadores que los evidencian, son lo que permite responder «qué resultado
+está en riesgo» y no sólo «esta competencia va al 62 %». Un resultado sin
+indicadores enlazados se marca en pantalla, porque no se puede medir.
 
 **Una competencia no se evalúa con una calificación general.** Se descompone
 en dimensiones observables --comprensión del problema, descomposición,

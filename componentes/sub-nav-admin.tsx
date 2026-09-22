@@ -23,6 +23,11 @@ const SECCIONES: readonly { ruta: string; etiqueta: string; pie: string }[] = [
     pie: 'Programas, cursos y grupos',
   },
   {
+    ruta: '/admin/curriculo',
+    etiqueta: 'Modelo curricular',
+    pie: 'Macro, meso, micro y resultados',
+  },
+  {
     ruta: '/admin/competencias',
     etiqueta: 'Competencias e indicadores',
     pie: 'Dimensiones y cómo se miden',
