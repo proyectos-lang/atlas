@@ -23,6 +23,11 @@ const SECCIONES: readonly { ruta: string; etiqueta: string; pie: string }[] = [
     pie: 'Programas, cursos y grupos',
   },
   {
+    ruta: '/admin/competencias',
+    etiqueta: 'Competencias e indicadores',
+    pie: 'Dimensiones y cómo se miden',
+  },
+  {
     ruta: '/admin/perfil-egreso',
     etiqueta: 'Perfil de egreso',
     pie: 'Contexto curricular para el análisis de IA',

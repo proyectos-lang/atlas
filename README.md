@@ -36,6 +36,8 @@ Ejecutar **en orden** desde el SQL Editor de Supabase:
 | 6 | `supabase/migraciones/06_perfil_egreso.sql` | perfil de egreso por programa |
 | 7 | `supabase/migraciones/07_permisos_modulos.sql` | permisos de módulo por perfil |
 | 8 | `supabase/migraciones/08_jerarquia.sql` | programas, grupos y alcance jerárquico |
+| 9 | `supabase/migraciones/09_curriculo.sql` | modelo curricular macro-meso-micro |
+| 10 | `supabase/migraciones/10_seed_competencias.sql` | semilla de competencias e indicadores |
 
 > La migración 04 depende de que `usuarios` y `semanas` ya tengan datos.
 > Ejecutarla **después** de `npm run seed`.
@@ -84,6 +86,38 @@ Anclajes de la semilla de rúbrica (1296 filas):
 | TD | 850 | 1080 | 78,70 % |
 | NIA | 898 | 1296 | 69,29 % |
 | UEA | 616 | 864 | 71,30 % |
+
+## Modelo curricular
+
+Trazabilidad macro → meso → micro, con la medición descompuesta:
+
+```
+Institución → Facultad → Programa              (macro)
+  → Área → Línea → Semestre                     (meso)
+    → Asignatura → Unidad → Actividad           (micro)
+      → Resultado de aprendizaje → Competencia
+        → Dimensión → Indicador
+```
+
+Se administra en **Administración → Competencias e indicadores**.
+
+**Una competencia no se evalúa con una calificación general.** Se descompone
+en dimensiones observables --comprensión del problema, descomposición,
+depuración…-- y cada dimensión se mide con indicadores que declaran cómo se
+agregan: promedio, suma sobre un valor esperado, proporción sobre un umbral,
+conteo o rúbrica. El truncamiento y el prorrateo dejan de estar cableados en
+SQL y pasan a ser configurables por indicador.
+
+Las cinco competencias transversales vienen sembradas con sus dimensiones.
+`student_outcome` declara la correspondencia ABET; una competencia
+transversal **sin** Student Outcome es complementaria: se trabaja en el
+programa pero no corresponde a ninguno directo. Aprendizaje Autónomo es el
+caso, y hay una prueba que lo verifica.
+
+Las migraciones 09 y 10 son **aditivas**: no tocan ninguna tabla de hechos ni
+ninguna función del motor, y `pruebas/curriculo.test.ts` lo comprueba leyendo
+el SQL. Por eso `npm run motor` sigue dando los mismos valores después de
+aplicarlas.
 
 ## Jerarquía académica
 
