@@ -5,6 +5,7 @@ import { clienteServidor } from '@/lib/supabase/servidor'
 import { universidades } from '@/lib/kpi/consultas'
 import { FormularioPerfilEgreso, type ProgramaOpcion } from './formulario'
 import { alternarActivoEgreso } from './acciones'
+import { faltaMigracion } from '@/lib/supabase/migracion-pendiente'
 
 export const metadata = { title: 'Perfil de egreso · ATLAS' }
 
@@ -29,9 +30,7 @@ export default async function PaginaPerfilEgreso() {
 
   // La tabla puede no existir todavía: la migración 06 se aplica a mano
   // desde el SQL Editor. Mejor un aviso accionable que una pantalla rota.
-  // PostgREST responde PGRST205 (no está en su caché de esquema); 42P01 es
-  // el código de Postgres, por si la consulta llegara a pasar de largo.
-  const faltaTabla = error?.code === 'PGRST205' || error?.code === '42P01'
+  const faltaTabla = faltaMigracion(error?.code)
   const filas = (data ?? []) as unknown as FilaEgreso[]
   const porUniversidad = new Map(filas.map((f) => [Number(f.universidad_id), f]))
 

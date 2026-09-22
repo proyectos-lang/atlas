@@ -56,10 +56,10 @@ export const INICIO_POR_ROL: Record<Rol, string> = {
 
 /** Rutas que cada rol puede visitar. */
 export const RUTAS_POR_ROL: Record<Rol, readonly string[]> = {
-  admin: ['/inicio', '/administrador', '/coordinador', '/asesor', '/docente', '/estudiante', '/analisis', '/admin', '/componentes', '/recomendador', '/acerca-de'],
-  coordinador: ['/inicio', '/coordinador', '/asesor', '/docente', '/estudiante', '/analisis', '/recomendador', '/acerca-de'],
-  asesor: ['/inicio', '/asesor', '/analisis', '/recomendador', '/acerca-de'],
-  docente: ['/inicio', '/docente', '/analisis', '/acerca-de'],
+  admin: ['/inicio', '/analitica', '/administrador', '/coordinador', '/asesor', '/docente', '/estudiante', '/analisis', '/admin', '/componentes', '/recomendador', '/acerca-de'],
+  coordinador: ['/inicio', '/analitica', '/coordinador', '/asesor', '/docente', '/estudiante', '/analisis', '/recomendador', '/acerca-de'],
+  asesor: ['/inicio', '/analitica', '/asesor', '/analisis', '/recomendador', '/acerca-de'],
+  docente: ['/inicio', '/analitica', '/docente', '/analisis', '/acerca-de'],
   estudiante: ['/inicio', '/estudiante', '/acerca-de'],
 }
 

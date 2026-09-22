@@ -1,6 +1,7 @@
 import 'server-only'
 import { clienteServidor } from '@/lib/supabase/servidor'
 import { alcanceVacio, type Alcance } from '@/lib/auth/alcance'
+import { faltaMigracion } from '@/lib/supabase/migracion-pendiente'
 
 /**
  * Acceso a datos de negocio.
@@ -223,7 +224,7 @@ export async function programas(alcance: Alcance): Promise<Programa[]> {
   q = ceñir(q, alcance, { universidad: 'universidad_id', programa: 'id' })
   const { data, error } = await q
   if (error) {
-    if (error.code === 'PGRST205' || error.code === '42P01') return []
+    if (faltaMigracion(error.code)) return []
     throw new Error(`programas: ${error.message}`)
   }
   return (data ?? []).map((p) => ({
@@ -249,7 +250,7 @@ export async function grupos(alcance: Alcance): Promise<Grupo[]> {
   q = ceñir(q, alcance, { curso: 'curso_id', grupo: 'id' })
   const { data, error } = await q
   if (error) {
-    if (error.code === 'PGRST205' || error.code === '42P01') return []
+    if (faltaMigracion(error.code)) return []
     throw new Error(`grupos: ${error.message}`)
   }
   return (data ?? []).map((g) => ({

@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { clienteServidor } from '@/lib/supabase/servidor'
 import { exigirRol } from '@/lib/auth/sesion'
 import { normalizar, type Transformacion } from '@/lib/evidencias/modelo'
+import { faltaMigracion } from '@/lib/supabase/migracion-pendiente'
 
 export interface EstadoFuente {
   error?: string
@@ -30,10 +31,6 @@ function numeroONulo(v: FormDataEntryValue | null): number | null {
   if (!s) return null
   const n = Number(s)
   return Number.isFinite(n) ? n : null
-}
-
-function faltaTabla(codigo?: string): boolean {
-  return codigo === 'PGRST205' || codigo === '42P01' || codigo === '42703'
 }
 
 const AVISO =
@@ -64,7 +61,7 @@ export async function crearFuente(
   })
 
   if (error) {
-    if (faltaTabla(error.code)) return { error: AVISO }
+    if (faltaMigracion(error.code)) return { error: AVISO }
     if (error.code === '23505') return { error: `Ya existe una fuente con código ${codigo}.` }
     return { error: `No se pudo crear: ${error.message}` }
   }
@@ -132,7 +129,7 @@ export async function crearMapeo(
   })
 
   if (error) {
-    if (faltaTabla(error.code)) return { error: AVISO }
+    if (faltaMigracion(error.code)) return { error: AVISO }
     if (error.code === '23505') {
       return { error: 'Ya existe ese mapeo: el mismo dato entraría dos veces al indicador.' }
     }
@@ -238,7 +235,7 @@ export async function cargarEvidencias(
     .eq('rol', 'Estudiante')
 
   if (eEst) {
-    if (faltaTabla(eEst.code)) return { error: AVISO }
+    if (faltaMigracion(eEst.code)) return { error: AVISO }
     return { error: `No se pudieron leer los estudiantes: ${eEst.message}` }
   }
 
@@ -345,7 +342,7 @@ export async function cargarEvidencias(
         terminado_en: new Date().toISOString(),
       }).eq('id', loteId)
     }
-    if (faltaTabla(error.code)) return { error: AVISO }
+    if (faltaMigracion(error.code)) return { error: AVISO }
     return { error: `No se pudieron guardar las evidencias: ${error.message}` }
   }
 

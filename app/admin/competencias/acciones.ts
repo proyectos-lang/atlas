@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { clienteServidor } from '@/lib/supabase/servidor'
 import { exigirRol } from '@/lib/auth/sesion'
+import { faltaMigracion } from '@/lib/supabase/migracion-pendiente'
 
 export interface EstadoCompetencia {
   error?: string
@@ -23,10 +24,6 @@ function numeroONulo(v: FormDataEntryValue | null): number | null {
   if (!s) return null
   const n = Number(s)
   return Number.isFinite(n) ? n : null
-}
-
-function faltaTabla(codigo?: string): boolean {
-  return codigo === 'PGRST205' || codigo === '42P01' || codigo === '42703'
 }
 
 const AVISO =
@@ -70,7 +67,7 @@ export async function crearCompetencia(
   })
 
   if (error) {
-    if (faltaTabla(error.code)) return { error: AVISO }
+    if (faltaMigracion(error.code)) return { error: AVISO }
     if (error.code === '23505') return { error: `Ya existe una competencia con código ${codigo}.` }
     return { error: `No se pudo crear: ${error.message}` }
   }
@@ -127,7 +124,7 @@ export async function crearDimension(
   })
 
   if (error) {
-    if (faltaTabla(error.code)) return { error: AVISO }
+    if (faltaMigracion(error.code)) return { error: AVISO }
     if (error.code === '23505') {
       return { error: `Ya existe una dimensión con ese código o nombre en la competencia.` }
     }
@@ -222,7 +219,7 @@ export async function crearIndicador(
   })
 
   if (error) {
-    if (faltaTabla(error.code)) return { error: AVISO }
+    if (faltaMigracion(error.code)) return { error: AVISO }
     if (error.code === '23505') return { error: `Ya existe un indicador con código ${codigo}.` }
     return { error: `No se pudo crear: ${error.message}` }
   }

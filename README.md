@@ -41,6 +41,7 @@ Ejecutar **en orden** desde el SQL Editor de Supabase:
 | 11 | `supabase/migraciones/11_evidencias.sql` | fuentes de datos, mapeos y evidencias |
 | 12 | `supabase/migraciones/12_motor_evidencias.sql` | motor de cálculo configurable |
 | 13 | `supabase/migraciones/13_arreglo_conteo.sql` | corrige el Conteo sin valor esperado |
+| 14 | `supabase/migraciones/14_analitica.sql` | analítica descriptiva, diagnóstica y predictiva |
 
 > La migración 04 depende de que `usuarios` y `semanas` ya tengan datos.
 > Ejecutarla **después** de `npm run seed`.
@@ -89,6 +90,24 @@ Anclajes de la semilla de rúbrica (1296 filas):
 | TD | 850 | 1080 | 78,70 % |
 | NIA | 898 | 1296 | 69,29 % |
 | UEA | 616 | 864 | 71,30 % |
+
+## Analítica
+
+Las cuatro funciones del modelo, en `/analitica`:
+
+- **Descriptiva** — qué está ocurriendo: estado por dimensión, con cuántas
+  evidencias se afirma cada valor.
+- **Diagnóstica** — qué dificultades hay. Distingue **dificultad individual**
+  de **dificultad del grupo**: una dimensión baja en casi todo el curso señala
+  un problema de enseñanza, no del estudiante, y la intervención es distinta.
+- **Predictiva** — quién requiere atención. No predice notas: identifica
+  patrones observables, y **cada alerta dice por qué se marcó**. Se evitó
+  deliberadamente un modelo estadístico opaco: una alerta que no se puede
+  explicar no sirve para decidir una intervención.
+- **Prescriptiva** — es el recomendador de IA, que ya existe.
+
+Todo se calcula **sobre indicadores, no sobre calificaciones**: la pantalla
+responde «falla en depuración», no «tiene 60».
 
 ## Fuentes de datos y evidencias
 

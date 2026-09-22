@@ -1,6 +1,7 @@
 import 'server-only'
 import { clienteServidor } from '@/lib/supabase/servidor'
 import { alcanceVacio, type Alcance } from '@/lib/auth/alcance'
+import { faltaMigracion } from '@/lib/supabase/migracion-pendiente'
 
 /**
  * Capa tipada sobre las funciones de Postgres del motor.
@@ -62,7 +63,7 @@ export async function resolverJerarquia(alcance: Alcance): Promise<Alcance> {
     // Columna aún sin migrar: la jerarquía es aditiva, así que se sigue
     // con el alcance de siempre en vez de devolver cero filas.
     if (eCursos) {
-      if (eCursos.code === 'PGRST205' || eCursos.code === '42703') return alcance
+      if (faltaMigracion(eCursos.code)) return alcance
       throw new Error(`cursos del programa: ${eCursos.message}`)
     }
     q = q.in('curso_id', (cursosProg ?? []).map((c) => Number(c.id)))
@@ -73,7 +74,7 @@ export async function resolverJerarquia(alcance: Alcance): Promise<Alcance> {
 
   const { data, error } = await q
   if (error) {
-    if (error.code === 'PGRST205' || error.code === '42703') return alcance
+    if (faltaMigracion(error.code)) return alcance
     throw new Error(`resolver jerarquia: ${error.message}`)
   }
 

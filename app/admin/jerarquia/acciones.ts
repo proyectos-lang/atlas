@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { clienteServidor } from '@/lib/supabase/servidor'
 import { exigirRol } from '@/lib/auth/sesion'
+import { faltaMigracion } from '@/lib/supabase/migracion-pendiente'
 
 export interface EstadoJerarquia {
   error?: string
@@ -21,11 +22,6 @@ function entero(v: FormDataEntryValue | null): number | null {
   if (!s) return null
   const n = Number(s)
   return Number.isInteger(n) && n > 0 ? n : null
-}
-
-/** Falta la migración 08: mejor decirlo que devolver un error opaco. */
-function faltaMigracion(codigo?: string): boolean {
-  return codigo === 'PGRST205' || codigo === '42P01' || codigo === '42703'
 }
 
 const AVISO_MIGRACION =

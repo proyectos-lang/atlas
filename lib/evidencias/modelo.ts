@@ -1,6 +1,7 @@
 import 'server-only'
 import { clienteServidor } from '@/lib/supabase/servidor'
 import { alcanceVacio, type Alcance } from '@/lib/auth/alcance'
+import { faltaMigracion } from '@/lib/supabase/migracion-pendiente'
 
 /**
  * Fuentes de datos, mapeos y evidencias.
@@ -15,10 +16,6 @@ import { alcanceVacio, type Alcance } from '@/lib/auth/alcance'
  */
 
 type Fila = Record<string, unknown>
-
-function faltaTabla(codigo?: string): boolean {
-  return codigo === 'PGRST205' || codigo === '42P01' || codigo === '42703'
-}
 
 export type CategoriaFuente =
   | 'LMS' | 'Colaborativa' | 'Codigo' | 'Formulario'
@@ -101,7 +98,7 @@ export async function fuentes(soloActivas = false): Promise<FuenteDatos[]> {
 
   const { data, error } = await q
   if (error) {
-    if (faltaTabla(error.code)) return []
+    if (faltaMigracion(error.code)) return []
     throw new Error(`fuentes: ${error.message}`)
   }
 
@@ -124,7 +121,7 @@ export async function mapeos(cursoIds?: number[] | null): Promise<Mapeo[]> {
     .order('id')
 
   if (error) {
-    if (faltaTabla(error.code)) return []
+    if (faltaMigracion(error.code)) return []
     throw new Error(`mapeos: ${error.message}`)
   }
 
@@ -200,7 +197,7 @@ export async function evidencias(
 
   const { data, error } = await q
   if (error) {
-    if (faltaTabla(error.code)) return []
+    if (faltaMigracion(error.code)) return []
     throw new Error(`evidencias: ${error.message}`)
   }
 
@@ -249,7 +246,7 @@ export async function indicadoresCalculados(
   const { data, error } = await db.rpc('kpi_evidencias', { p_semanas: semanas })
 
   if (error) {
-    if (faltaTabla(error.code)) return []
+    if (faltaMigracion(error.code)) return []
     throw new Error(`kpi_evidencias: ${error.message}`)
   }
 

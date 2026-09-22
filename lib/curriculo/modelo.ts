@@ -1,6 +1,7 @@
 import 'server-only'
 import { clienteServidor } from '@/lib/supabase/servidor'
 import { alcanceVacio, type Alcance } from '@/lib/auth/alcance'
+import { faltaMigracion } from '@/lib/supabase/migracion-pendiente'
 
 /**
  * Modelo curricular macro / meso / micro.
@@ -27,10 +28,6 @@ import { alcanceVacio, type Alcance } from '@/lib/auth/alcance'
 type Fila = Record<string, unknown>
 
 /** La tabla aún no existe: migración 09 o 10 sin aplicar. */
-function faltaTabla(codigo?: string): boolean {
-  return codigo === 'PGRST205' || codigo === '42P01' || codigo === '42703'
-}
-
 export type Ambito = 'Programa' | 'Area' | 'Curso'
 export type Agregacion = 'Promedio' | 'Suma' | 'Proporcion' | 'Conteo' | 'Rubrica'
 export type EscalaIndicador = 'Porcentaje' | 'Puntos'
@@ -116,7 +113,7 @@ export async function competencias(alcance: Alcance): Promise<Competencia[]> {
     .order('orden')
 
   if (error) {
-    if (faltaTabla(error.code)) return []
+    if (faltaMigracion(error.code)) return []
     throw new Error(`competencias: ${error.message}`)
   }
 
@@ -152,7 +149,7 @@ export async function dimensiones(competenciaIds?: number[]): Promise<Dimension[
 
   const { data, error } = await q
   if (error) {
-    if (faltaTabla(error.code)) return []
+    if (faltaMigracion(error.code)) return []
     throw new Error(`dimensiones: ${error.message}`)
   }
 
@@ -183,7 +180,7 @@ export async function indicadores(dimensionIds?: number[]): Promise<Indicador[]>
 
   const { data, error } = await q
   if (error) {
-    if (faltaTabla(error.code)) return []
+    if (faltaMigracion(error.code)) return []
     throw new Error(`indicadores: ${error.message}`)
   }
 
@@ -220,7 +217,7 @@ export async function resultados(filtro: {
 
   const { data, error } = await q
   if (error) {
-    if (faltaTabla(error.code)) return []
+    if (faltaMigracion(error.code)) return []
     throw new Error(`resultados: ${error.message}`)
   }
 
@@ -249,7 +246,7 @@ export async function areas(programaIds?: number[] | null): Promise<Area[]> {
 
   const { data, error } = await q
   if (error) {
-    if (faltaTabla(error.code)) return []
+    if (faltaMigracion(error.code)) return []
     throw new Error(`areas: ${error.message}`)
   }
 

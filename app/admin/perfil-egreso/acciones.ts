@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { clienteServidor } from '@/lib/supabase/servidor'
 import { exigirRol } from '@/lib/auth/sesion'
+import { faltaMigracion } from '@/lib/supabase/migracion-pendiente'
 
 export interface EstadoPerfilEgreso {
   error?: string
@@ -74,9 +75,7 @@ export async function guardarPerfilEgreso(
     )
 
   if (error) {
-    // PGRST205: PostgREST no encuentra la tabla en su caché de esquema.
-    // 42P01: el propio Postgres dice que no existe.
-    if (error.code === 'PGRST205' || error.code === '42P01') {
+    if (faltaMigracion(error.code)) {
       return {
         error:
           'Falta la tabla atlas.perfiles_egreso. Aplica la migración ' +
