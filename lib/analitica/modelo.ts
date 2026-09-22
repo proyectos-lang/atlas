@@ -62,6 +62,13 @@ export interface FilaPredictiva {
   mediaGeneral: number
   minimo: number
   sinEvidencia: number
+  /**
+   * Proporción de dimensiones con evidencia, de 0 a 1.
+   *
+   * Dice sobre cuánta base se afirma el riesgo: un «Alto» con dos
+   * dimensiones medidas de veinticinco no es lo mismo que uno con veinte.
+   */
+  cobertura: number | null
   riesgo: NivelRiesgo
   /** Por qué se marcó así. Una alerta sin explicación no es accionable. */
   senales: string[]
@@ -159,6 +166,7 @@ export async function predictiva(
       mediaGeneral: Number(f.media_general),
       minimo: Number(f.minimo),
       sinEvidencia: Number(f.sin_evidencia),
+      cobertura: f.cobertura == null ? null : Number(f.cobertura),
       riesgo: String(f.riesgo) as NivelRiesgo,
       senales: Array.isArray(f.senales) ? f.senales.map(String) : [],
     }))

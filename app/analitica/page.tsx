@@ -124,7 +124,8 @@ export default async function PaginaAnalitica({
           <p className="mb-4 mt-1 max-w-3xl text-sm text-texto-secundario">
             No es una predicción de nota: son patrones observables asociados
             con bajo logro. Cada alerta dice por qué se marcó, para que puedas
-            contrastarla con lo que ves en clase.
+            contrastarla con lo que ves en clase. La cobertura indica sobre
+            cuántas dimensiones medidas se sostiene el diagnóstico.
           </p>
 
           {enRiesgo.length === 0 ? (
@@ -142,6 +143,7 @@ export default async function PaginaAnalitica({
                     <th className="py-2 pr-3 font-medium">Riesgo</th>
                     <th className="py-2 pr-3 font-medium">Media</th>
                     <th className="py-2 pr-3 font-medium">Dimensiones bajas</th>
+                    <th className="py-2 pr-3 font-medium">Cobertura</th>
                     <th className="py-2 font-medium">Por qué</th>
                   </tr>
                 </thead>
@@ -159,6 +161,11 @@ export default async function PaginaAnalitica({
                       <td className="py-2 pr-3">{pct(p.mediaGeneral)}</td>
                       <td className="py-2 pr-3 text-texto-secundario">
                         {p.dimensionesBajas} de {p.dimensionesTotales}
+                      </td>
+                      <td className="py-2 pr-3 text-texto-secundario">
+                        {p.cobertura === null
+                          ? '—'
+                          : `${Math.round(p.cobertura * 100)} %`}
                       </td>
                       <td className="py-2">
                         <ul className="space-y-0.5 text-xs text-texto-secundario">

@@ -42,6 +42,7 @@ Ejecutar **en orden** desde el SQL Editor de Supabase:
 | 12 | `supabase/migraciones/12_motor_evidencias.sql` | motor de cálculo configurable |
 | 13 | `supabase/migraciones/13_arreglo_conteo.sql` | corrige el Conteo sin valor esperado |
 | 14 | `supabase/migraciones/14_analitica.sql` | analítica descriptiva, diagnóstica y predictiva |
+| 15 | `supabase/migraciones/15_arreglo_senales.sql` | corrige señales con ruido y clasificación |
 
 > La migración 04 depende de que `usuarios` y `semanas` ya tengan datos.
 > Ejecutarla **después** de `npm run seed`.
@@ -303,6 +304,7 @@ El cálculo pesado vive en funciones de Postgres (`supabase/migraciones/05_vista
 
 ```bash
 npm run motor            # calcula los indicadores y los compara con la referencia
+npm run analitica        # escenario de resultado conocido para la analítica
 npm run motor:contraste  # contrasta las vistas SQL con el cálculo de referencia
 npm run test             # 120 pruebas
 ```

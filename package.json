@@ -14,7 +14,8 @@
     "migrar": "tsx scripts/seed/migrar.ts",
     "seed:catalogo": "tsx scripts/seed/cargar-catalogo.ts",
     "motor": "tsx scripts/seed/comprobar-motor.ts",
-    "motor:contraste": "tsx scripts/seed/contrastar-vistas.ts"
+    "motor:contraste": "tsx scripts/seed/contrastar-vistas.ts",
+    "analitica": "tsx scripts/seed/comprobar-analitica.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.124.0",
