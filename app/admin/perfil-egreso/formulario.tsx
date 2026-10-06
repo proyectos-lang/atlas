@@ -32,7 +32,7 @@ export function FormularioPerfilEgreso({ programas }: { programas: ProgramaOpcio
   if (programas.length === 0) {
     return (
       <p className="text-sm text-texto-secundario">
-        No hay programas visibles en tu alcance.
+        No hay programas visibles en tu alcance. Crea uno con el asistente.
       </p>
     )
   }
@@ -44,7 +44,7 @@ export function FormularioPerfilEgreso({ programas }: { programas: ProgramaOpcio
           Universidad y programa
         </label>
         <select
-          name="universidad_id"
+          name="programa_id"
           value={seleccionado}
           onChange={(e) => {
             const id = Number(e.target.value)

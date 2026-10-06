@@ -9,6 +9,8 @@ import { subirPlanEstudios, borrarArchivo } from '@/lib/documentos/almacen'
 export interface EstadoCurriculo {
   error?: string
   ok?: string
+  id?: number
+  nombre?: string
 }
 
 const CODIGO = /^[A-Za-z0-9_-]{2,30}$/
@@ -422,18 +424,19 @@ export async function crearResultado(
   }
 
   const db = clienteServidor()
-  const { error } = await db.from('resultados').insert({
+  const { data, error } = await db.from('resultados').insert({
     codigo, enunciado, ambito,
     programa_id: ambito === 'Programa' ? programaId : null,
     area_id: ambito === 'Area' ? areaId : null,
     curso_id: ambito === 'Curso' ? cursoId : null,
     competencia_id: competenciaId,
-  })
+  }).select('id').single()
 
   if (error) return { error: mensaje(error, 'un resultado con ese código') }
 
   revalidatePath('/admin/curriculo')
-  return { ok: `Resultado ${codigo} creado.` }
+  revalidatePath('/admin/crear')
+  return { ok: `Resultado ${codigo} creado.`, id: Number(data.id), nombre: codigo }
 }
 
 /**

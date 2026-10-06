@@ -4,7 +4,10 @@ import { SubNavAdmin } from '@/componentes/sub-nav-admin'
 import { clienteServidor } from '@/lib/supabase/servidor'
 import { universidades, cursos, programas, grupos } from '@/lib/kpi/consultas'
 import { FormularioPrograma, FormularioGrupo } from './formularios'
-import { asignarDocente, alternarGrupo, moverCurso } from './acciones'
+import { asignarDocente, moverCurso } from './acciones'
+import { EditorEntidad } from '@/componentes/editor-entidad'
+import { camposParaEditor } from '@/lib/admin/entidades'
+
 
 export const metadata = { title: 'Jerarquía académica · ATLAS' }
 
@@ -81,6 +84,21 @@ export default async function PaginaJerarquia() {
   return (
     <Marco perfil={perfil} titulo="Jerarquía académica" lateral={<SubNavAdmin />}>
       <div className="space-y-5">
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-tarjeta
+                        border border-institucional/20 bg-institucional-suave p-4">
+          <p className="text-sm text-slate-700">
+            ¿Vas a crear una universidad, un programa, un curso o un grupo?
+            El asistente te guía paso a paso.
+          </p>
+          <a
+            href="/admin/crear"
+            className="rounded-lg bg-institucional px-4 py-2 text-sm font-medium text-white
+                       transition hover:bg-institucional-claro"
+          >
+            Abrir el asistente
+          </a>
+        </div>
+
         {faltaJerarquia && (
           <div className="rounded-tarjeta border border-amber-300 bg-amber-50 p-4">
             <h2 className="text-sm font-semibold text-amber-900">
@@ -145,6 +163,13 @@ export default async function PaginaJerarquia() {
                     {u.codigo}
                   </span>
                 </h3>
+                <EditorEntidad
+                  tabla="universidades"
+                  id={u.id}
+                  nombre={u.universidad}
+                  campos={camposParaEditor('universidades', u as unknown as Record<string, unknown>)}
+                  activo
+                />
 
                 {u.programas.length === 0 && (
                   <p className="mt-2 text-sm text-texto-secundario">
@@ -160,6 +185,14 @@ export default async function PaginaJerarquia() {
                         {p.codigo}{p.modalidad ? ` · ${p.modalidad}` : ''}
                       </span>
                     </h4>
+                    <EditorEntidad
+                      tabla="programas"
+                      id={p.id}
+                      nombre={p.nombre}
+                      campos={camposParaEditor('programas', p as unknown as Record<string, unknown>)}
+                      activo
+                      compacto
+                    />
 
                     {p.cursos.length === 0 && (
                       <p className="mt-1 text-xs text-texto-secundario">Sin cursos.</p>
@@ -173,6 +206,14 @@ export default async function PaginaJerarquia() {
                             {c.codigo} · {c.semanas} semanas
                           </span>
                         </div>
+                        <EditorEntidad
+                          tabla="cursos"
+                          id={c.id}
+                          nombre={c.nombre}
+                          campos={camposParaEditor('cursos', c as unknown as Record<string, unknown>)}
+                          activo
+                          compacto
+                        />
 
                         {c.grupos.length === 0 && (
                           <p className="mt-1 text-xs text-texto-secundario">
@@ -194,17 +235,15 @@ export default async function PaginaJerarquia() {
                                     {g.codigo} · {porGrupo.get(g.id) ?? 0} estudiantes
                                   </span>
                                 </span>
+                                <EditorEntidad
+                                  tabla="grupos"
+                                  id={g.id}
+                                  nombre={g.nombre}
+                                  campos={camposParaEditor('grupos', g as unknown as Record<string, unknown>)}
+                                  activo
+                                  compacto
+                                />
 
-                                <form action={alternarGrupo}>
-                                  <input type="hidden" name="id" value={String(g.id)} />
-                                  <input type="hidden" name="activo" value="true" />
-                                  <button
-                                    type="submit"
-                                    className="text-xs text-institucional underline underline-offset-2"
-                                  >
-                                    Desactivar
-                                  </button>
-                                </form>
                               </div>
 
                               <form

@@ -5,7 +5,8 @@ import { arbolCompetencias } from '@/lib/curriculo/modelo'
 import {
   FormularioCompetencia, FormularioDimension, FormularioIndicador,
 } from './formularios'
-import { alternarIndicador, alternarDimension } from './acciones'
+import { EditorEntidad } from '@/componentes/editor-entidad'
+import { camposParaEditor } from '@/lib/admin/entidades'
 
 export const metadata = { title: 'Competencias e indicadores · ATLAS' }
 
@@ -121,6 +122,14 @@ export default async function PaginaCompetencias() {
                 {c.descripcion && (
                   <p className="mt-1 text-sm text-slate-600">{c.descripcion}</p>
                 )}
+                <EditorEntidad
+                  tabla="competencias" id={c.id} nombre={c.nombre}
+                  campos={camposParaEditor('competencias', {
+                    codigo: c.codigo, nombre: c.nombre, descripcion: c.descripcion,
+                    student_outcome: c.studentOutcome,
+                  })}
+                  activo={c.activo}
+                />
 
                 {c.dimensiones.length === 0 && (
                   <p className="mt-2 text-sm text-texto-secundario">
@@ -147,21 +156,18 @@ export default async function PaginaCompetencias() {
                             {d.codigo}
                           </span>
                         </h4>
-                        <form action={alternarDimension}>
-                          <input type="hidden" name="id" value={String(d.id)} />
-                          <input type="hidden" name="activo" value={String(d.activo)} />
-                          <button
-                            type="submit"
-                            className="text-xs text-institucional underline underline-offset-2"
-                          >
-                            {d.activo ? 'Desactivar' : 'Activar'}
-                          </button>
-                        </form>
                       </div>
 
                       {d.descripcion && (
                         <p className="mt-0.5 text-xs text-texto-secundario">{d.descripcion}</p>
                       )}
+                      <EditorEntidad
+                        tabla="dimensiones" id={d.id} nombre={d.nombre}
+                        campos={camposParaEditor('dimensiones', {
+                          codigo: d.codigo, nombre: d.nombre, descripcion: d.descripcion,
+                        })}
+                        activo={d.activo} compacto
+                      />
 
                       {d.indicadores.length === 0 && (
                         <p className="mt-1 text-xs text-amber-700">
@@ -194,17 +200,15 @@ export default async function PaginaCompetencias() {
                                 {i.prorratea && ' · se prorratea'}
                               </span>
                             </span>
+                            <EditorEntidad
+                              tabla="indicadores" id={i.id} nombre={i.nombre}
+                              campos={camposParaEditor('indicadores', {
+                                codigo: i.codigo, nombre: i.nombre, descripcion: i.descripcion,
+                                valor_esperado: i.valorEsperado, umbral: i.umbral,
+                              })}
+                              activo={i.activo} compacto
+                            />
 
-                            <form action={alternarIndicador}>
-                              <input type="hidden" name="id" value={String(i.id)} />
-                              <input type="hidden" name="activo" value={String(i.activo)} />
-                              <button
-                                type="submit"
-                                className="text-xs text-institucional underline underline-offset-2"
-                              >
-                                {i.activo ? 'Desactivar' : 'Activar'}
-                              </button>
-                            </form>
                           </li>
                         ))}
                       </ul>

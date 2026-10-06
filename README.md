@@ -45,6 +45,7 @@ Ejecutar **en orden** desde el SQL Editor de Supabase:
 | 15 | `supabase/migraciones/15_arreglo_senales.sql` | corrige señales con ruido y clasificación |
 | 16 | `supabase/migraciones/16_intervenciones.sql` | recomendación sobre dimensiones e intervenciones |
 | 17 | `supabase/migraciones/17_plan_estudios_pdf.sql` | plan de estudios en PDF |
+| 18 | `supabase/migraciones/18_edicion_y_egreso_por_programa.sql` | edición, desactivación y perfil de egreso por programa |
 
 > La migración 04 depende de que `usuarios` y `semanas` ya tengan datos.
 > Ejecutarla **después** de `npm run seed`.
@@ -247,6 +248,30 @@ ninguna función del motor, y `pruebas/curriculo.test.ts` lo comprueba leyendo
 el SQL. Por eso `npm run motor` sigue dando los mismos valores después de
 aplicarlas.
 
+## Crear, editar y eliminar
+
+**Administración → Asistente de creación** pregunta primero qué se quiere
+crear —universidad, programa, curso, grupo o resultado de aprendizaje— y
+guía paso a paso: dónde va, sus datos, y lo que naturalmente sigue (una
+universidad recién creada propone crear un programa; un programa, un curso).
+Un curso nace con su Grupo 1, como hizo la migración 08 con los existentes.
+
+Todo lo que se crea tiene un **Editar** en su pantalla, que también permite
+desactivar o eliminar. La edición es genérica pero sobre una **lista blanca**
+(`lib/admin/entidades.ts`): tabla por tabla se declara qué columnas admiten
+cambios y quién puede hacerlos. `activo`, `id` y las claves foráneas nunca
+son editables a mano.
+
+**Eliminar sólo funciona cuando nada depende de la fila.** Antes de intentarlo
+se cuentan los dependientes y se dice cuáles: «tiene 12 estudiantes y 3
+grupos» es accionable; «violación de clave foránea» no. Un curso con
+historial no se borra: se desactiva, deja de aparecer y conserva sus datos.
+El motor SQL no filtra por `activo`, así que un curso desactivado sigue
+contando en los agregados sin filtro; es una limitación conocida.
+
+Un coordinador sólo edita lo que cuelga de su programa; un docente, lo de su
+curso. Conocer el id de un programa ajeno no basta para renombrarlo.
+
 ## Jerarquía académica
 
 `Universidad → Programa → Curso → Grupo → estudiantes`, con el docente
@@ -308,10 +333,12 @@ perdería el acceso a la pantalla desde la que se arregla.
 
 ## Perfil de egreso
 
-Cada programa —cada fila de `universidades`, que ya es un par universidad +
-programa— puede tener un perfil de egreso: el texto del documento curricular
-que declara qué debe saber hacer quien termina. Se configura en
-**Administración → Perfil de egreso**, sólo el administrador.
+Cada **programa** puede tener un perfil de egreso: el texto del documento
+curricular que declara qué debe saber hacer quien termina. Se configura en
+**Administración → Perfil de egreso**, por administrador o coordinador.
+Hasta la migración 18 se colgaba de la universidad —cuando universidad y
+programa eran la misma fila— y una universidad con dos programas sólo podía
+tener uno; ahora la clave es el programa.
 
 No es un dato más del tablero: entra en el contexto del agente de IA, que lo
 recibe rotulado como documento curricular junto a los indicadores del

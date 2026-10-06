@@ -42,6 +42,23 @@ function ceñir<T extends {
   return q
 }
 
+
+/**
+ * Ejecuta una consulta que filtra por `activo` y, si la columna no existe
+ * todavía (migración 18 sin aplicar), la repite sin ese filtro.
+ *
+ * Sin esto, añadir el filtro habría dejado sin universidades ni cursos a
+ * toda la aplicación hasta que alguien aplicara la migración: un fallo
+ * total por una columna que sólo sirve para ocultar lo desactivado.
+ */
+async function conActivoOpcional<T>(
+  consulta: (conFiltro: boolean) => PromiseLike<{ data: T[] | null; error: { code?: string; message: string } | null }>
+): Promise<{ data: T[] | null; error: { code?: string; message: string } | null }> {
+  const primero = await consulta(true)
+  if (primero.error && primero.error.code === '42703') return consulta(false)
+  return primero
+}
+
 export interface Universidad {
   id: number; codigo: string; universidad: string
   programa: string; modalidad: string
@@ -71,11 +88,16 @@ export interface Estudiante {
 export async function universidades(alcance: Alcance): Promise<Universidad[]> {
   if (alcanceVacio(alcance)) return []
   const db = clienteServidor()
-  let q = db.from('universidades')
-    .select('id, codigo, universidad, programa, modalidad')
-    .order('codigo')
-  q = ceñir(q, alcance, { universidad: 'id' })
-  const { data, error } = await q
+  // Lo desactivado no aparece en selectores ni filtros. El motor SQL no
+  // filtra por `activo`: los datos de un curso desactivado siguen contando
+  // en los agregados sin filtro. Es una limitación conocida.
+  const { data, error } = await conActivoOpcional((conFiltro) => {
+    let q = db.from('universidades')
+      .select('id, codigo, universidad, programa, modalidad')
+      .order('codigo')
+    if (conFiltro) q = q.eq('activo', true)
+    return ceñir(q, alcance, { universidad: 'id' })
+  })
   if (error) throw new Error(`universidades: ${error.message}`)
   return (data ?? []).map((u) => ({
     id: Number(u.id), codigo: String(u.codigo),
@@ -87,13 +109,15 @@ export async function universidades(alcance: Alcance): Promise<Universidad[]> {
 export async function cursos(alcance: Alcance): Promise<Curso[]> {
   if (alcanceVacio(alcance)) return []
   const db = clienteServidor()
-  let q = db.from('cursos')
-    .select('id, codigo, nombre, universidad_id, programa_id, semanas')
-    .order('codigo')
-  q = ceñir(q, alcance, {
-    universidad: 'universidad_id', programa: 'programa_id', curso: 'id',
+  const { data, error } = await conActivoOpcional((conFiltro) => {
+    let q = db.from('cursos')
+      .select('id, codigo, nombre, universidad_id, programa_id, semanas')
+      .order('codigo')
+    if (conFiltro) q = q.eq('activo', true)
+    return ceñir(q, alcance, {
+      universidad: 'universidad_id', programa: 'programa_id', curso: 'id',
+    })
   })
-  const { data, error } = await q
   if (error) throw new Error(`cursos: ${error.message}`)
   return (data ?? []).map((c) => ({
     id: Number(c.id), codigo: String(c.codigo), nombre: String(c.nombre),
@@ -220,6 +244,7 @@ export async function programas(alcance: Alcance): Promise<Programa[]> {
   const db = clienteServidor()
   let q = db.from('programas')
     .select('id, codigo, nombre, universidad_id, modalidad')
+    .eq('activo', true)
     .order('codigo')
   q = ceñir(q, alcance, { universidad: 'universidad_id', programa: 'id' })
   const { data, error } = await q
@@ -246,6 +271,7 @@ export async function grupos(alcance: Alcance): Promise<Grupo[]> {
   const db = clienteServidor()
   let q = db.from('grupos')
     .select('id, codigo, nombre, curso_id, docente_id, periodo')
+    .eq('activo', true)
     .order('codigo')
   q = ceñir(q, alcance, { curso: 'curso_id', grupo: 'id' })
   const { data, error } = await q

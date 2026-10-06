@@ -55,6 +55,7 @@ const GRUPOS: readonly { titulo: string; items: readonly ItemNav[] }[] = [
     // encontraba, porque la sub-navegación sólo aparece una vez dentro.
     titulo: 'Configuración',
     items: [
+      { ruta: '/admin/crear', etiqueta: 'Asistente de creación', pie: 'Universidad, programa, curso, grupo…', icono: 'ajustes' },
       { ruta: '/admin/curriculo', etiqueta: 'Modelo curricular', pie: 'Macro, meso, micro y resultados', icono: 'programa' },
       { ruta: '/admin/competencias', etiqueta: 'Competencias', pie: 'Dimensiones e indicadores', icono: 'analisis' },
       { ruta: '/admin/fuentes', etiqueta: 'Fuentes de datos', pie: 'De dónde vienen las evidencias', icono: 'ajustes' },

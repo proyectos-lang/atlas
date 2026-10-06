@@ -13,6 +13,11 @@ import { usePathname } from 'next/navigation'
 
 const SECCIONES: readonly { ruta: string; etiqueta: string; pie: string }[] = [
   {
+    ruta: '/admin/crear',
+    etiqueta: 'Asistente de creación',
+    pie: 'Guiado paso a paso',
+  },
+  {
     ruta: '/admin/perfiles',
     etiqueta: 'Perfiles de acceso',
     pie: 'Quién entra y qué alcance tiene',

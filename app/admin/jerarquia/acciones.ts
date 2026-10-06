@@ -8,6 +8,9 @@ import { faltaMigracion } from '@/lib/supabase/migracion-pendiente'
 export interface EstadoJerarquia {
   error?: string
   ok?: string
+  /** Id y nombre de lo creado, para que el asistente encadene el paso siguiente. */
+  id?: number
+  nombre?: string
 }
 
 /** Códigos de negocio: letras, dígitos y guiones. Se usan en la URL. */
@@ -55,12 +58,12 @@ export async function crearPrograma(
   if (universidadId === null) return { error: 'Selecciona una universidad.' }
 
   const db = clienteServidor()
-  const { error } = await db.from('programas').insert({
+  const { data, error } = await db.from('programas').insert({
     codigo,
     nombre,
     universidad_id: universidadId,
     modalidad: modalidad || null,
-  })
+  }).select('id').single()
 
   if (error) {
     if (faltaMigracion(error.code)) return { error: AVISO_MIGRACION }
@@ -71,7 +74,8 @@ export async function crearPrograma(
   }
 
   revalidatePath('/admin/jerarquia')
-  return { ok: `Programa ${nombre} creado.` }
+  revalidatePath('/admin/crear')
+  return { ok: `Programa ${nombre} creado.`, id: Number(data.id), nombre }
 }
 
 // ---------- Grupos ----------
@@ -117,13 +121,13 @@ export async function crearGrupo(
     return { error: 'El código debe tener entre 2 y 20 caracteres: letras, dígitos o guiones.' }
   }
 
-  const { error } = await db.from('grupos').insert({
+  const { data, error } = await db.from('grupos').insert({
     codigo,
     nombre,
     curso_id: cursoId,
     docente_id: docenteId,
     periodo: periodo || null,
-  })
+  }).select('id').single()
 
   if (error) {
     if (faltaMigracion(error.code)) return { error: AVISO_MIGRACION }
@@ -134,7 +138,8 @@ export async function crearGrupo(
   }
 
   revalidatePath('/admin/jerarquia')
-  return { ok: `Grupo ${nombre} creado como ${codigo}.` }
+  revalidatePath('/admin/crear')
+  return { ok: `Grupo ${nombre} creado como ${codigo}.`, id: Number(data.id), nombre }
 }
 
 /**

@@ -13,6 +13,9 @@ import {
   type FichaMacro, type FichaMicro,
 } from './formularios'
 import { enlazarIndicador, desenlazarIndicador } from './acciones'
+import { EditorEntidad } from '@/componentes/editor-entidad'
+import { camposParaEditor } from '@/lib/admin/entidades'
+
 
 export const metadata = { title: 'Modelo curricular · ATLAS' }
 
@@ -54,12 +57,12 @@ export default async function PaginaCurriculo() {
     arbolCompetencias(alcance),
     areasDe(alcance.programaIds),
     resultadosDe(alcance),
-    leer('instituciones', 'id, codigo, nombre, siglas'),
-    leer('facultades', 'id, codigo, nombre, institucion_id'),
-    leer('lineas_curriculares', 'id, codigo, nombre, programa_id'),
+    leer('instituciones', '*'),
+    leer('facultades', '*'),
+    leer('lineas_curriculares', '*'),
     leer('programas_macro', '*'),
     leer('cursos_micro', '*'),
-    leer('unidades', 'id, codigo, nombre, curso_id, semana_inicio, semana_fin'),
+    leer('unidades', '*'),
     leer('resultado_indicadores', 'resultado_id, indicador_id'),
   ])
 
@@ -215,6 +218,11 @@ export default async function PaginaCurriculo() {
                     </div>
 
                     <p className="mt-1 text-sm text-slate-700">{r.enunciado}</p>
+                    <EditorEntidad
+                      tabla="resultados" id={r.id} nombre={r.codigo}
+                      campos={camposParaEditor('resultados', r as unknown as Record<string, unknown>)}
+                      activo={r.activo} compacto
+                    />
 
                     <div className="mt-3">
                       <span className="text-xs font-medium uppercase tracking-wide text-texto-secundario">
@@ -308,6 +316,10 @@ export default async function PaginaCurriculo() {
                     <li key={String(i.id)}>
                       {String(i.nombre)}
                       {i.siglas ? ` (${String(i.siglas)})` : ''}
+                      <EditorEntidad
+                        tabla="instituciones" id={Number(i.id)} nombre={String(i.nombre)}
+                        campos={camposParaEditor('instituciones', i)} activo={Boolean(i.activo)} compacto
+                      />
                     </li>
                   ))}
                 </ul>
@@ -326,7 +338,13 @@ export default async function PaginaCurriculo() {
               {facultades.length > 0 && (
                 <ul className="mb-3 mt-2 space-y-1 text-sm text-texto-secundario">
                   {facultades.map((f) => (
-                    <li key={String(f.id)}>{String(f.nombre)}</li>
+                    <li key={String(f.id)}>
+                      {String(f.nombre)}
+                      <EditorEntidad
+                        tabla="facultades" id={Number(f.id)} nombre={String(f.nombre)}
+                        campos={camposParaEditor('facultades', f)} activo={Boolean(f.activo)} compacto
+                      />
+                    </li>
                   ))}
                 </ul>
               )}
@@ -372,7 +390,14 @@ export default async function PaginaCurriculo() {
               {listaAreas.length > 0 && (
                 <ul className="mb-3 mt-2 space-y-1 text-sm text-texto-secundario">
                   {listaAreas.map((a) => (
-                    <li key={a.id}>{a.nombre}</li>
+                    <li key={a.id}>
+                      {a.nombre}
+                      <EditorEntidad
+                        tabla="areas" id={a.id} nombre={a.nombre}
+                        campos={camposParaEditor('areas', a as unknown as Record<string, unknown>)}
+                        activo={a.activo} compacto
+                      />
+                    </li>
                   ))}
                 </ul>
               )}
@@ -388,7 +413,13 @@ export default async function PaginaCurriculo() {
               {lineas.length > 0 && (
                 <ul className="mb-3 mt-2 space-y-1 text-sm text-texto-secundario">
                   {lineas.map((l) => (
-                    <li key={String(l.id)}>{String(l.nombre)}</li>
+                    <li key={String(l.id)}>
+                      {String(l.nombre)}
+                      <EditorEntidad
+                        tabla="lineas_curriculares" id={Number(l.id)} nombre={String(l.nombre)}
+                        campos={camposParaEditor('lineas_curriculares', l)} activo={Boolean(l.activo)} compacto
+                      />
+                    </li>
                   ))}
                 </ul>
               )}
@@ -443,6 +474,10 @@ export default async function PaginaCurriculo() {
                       <span className="ml-1 text-xs">
                         {nombreCurso.get(Number(u.curso_id)) ?? ''}
                       </span>
+                      <EditorEntidad
+                        tabla="unidades" id={Number(u.id)} nombre={String(u.nombre)}
+                        campos={camposParaEditor('unidades', u)} activo={Boolean(u.activo)} compacto
+                      />
                     </li>
                   ))}
                 </ul>

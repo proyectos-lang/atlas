@@ -8,7 +8,10 @@ import {
   type CategoriaFuente,
 } from '@/lib/evidencias/modelo'
 import { FormularioMapeo, FormularioCarga } from './formularios'
-import { alternarFuente, borrarMapeo } from './acciones'
+import { borrarMapeo } from './acciones'
+import { EditorEntidad } from '@/componentes/editor-entidad'
+import { camposParaEditor } from '@/lib/admin/entidades'
+
 
 export const metadata = { title: 'Fuentes de datos · ATLAS' }
 
@@ -127,22 +130,20 @@ export default async function PaginaFuentes() {
                             {NOMBRE_MODO[f.modoIngreso]}
                           </span>
                         </div>
-                        <form action={alternarFuente}>
-                          <input type="hidden" name="id" value={String(f.id)} />
-                          <input type="hidden" name="activo" value={String(f.activo)} />
-                          <button
-                            type="submit"
-                            className="shrink-0 text-xs text-institucional underline underline-offset-2"
-                          >
-                            {f.activo ? 'Desactivar' : 'Activar'}
-                          </button>
-                        </form>
                       </div>
                       {f.descripcion && (
                         <p className="mt-1.5 text-xs text-texto-secundario">
                           {f.descripcion}
                         </p>
                       )}
+                      <EditorEntidad
+                        tabla="fuentes_datos" id={f.id} nombre={f.nombre}
+                        campos={camposParaEditor('fuentes_datos', {
+                          codigo: f.codigo, nombre: f.nombre, descripcion: f.descripcion,
+                          modo_ingreso: f.modoIngreso,
+                        })}
+                        activo={f.activo} compacto
+                      />
                     </li>
                   ))}
                 </ul>

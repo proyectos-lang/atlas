@@ -15,24 +15,31 @@ const MINIMO = 20
 const MAXIMO = 20000
 
 /**
- * Guarda el perfil de egreso de un programa (una fila de universidades).
+ * Guarda el perfil de egreso de un PROGRAMA.
  *
- * Sólo admin: el perfil de egreso es el documento curricular del programa
- * y cambia el contexto con el que el agente redacta TODAS las
- * recomendaciones de ese programa.
+ * Hasta la migración 18 se colgaba de la universidad, porque en la 06
+ * universidad y programa eran la misma fila. El usuario lo vio como
+ * «los nombres de los programas no corresponden»: la pantalla leía una
+ * columna de texto obsoleta y no la tabla de programas.
  *
- * Es un upsert por universidad_id: la tabla tiene esa columna unique, así
- * que guardar dos veces reemplaza en vez de duplicar.
+ * Es un upsert por programa_id. `universidad_id` se deriva del programa
+ * --la tabla la exige-- en vez de pedirla aparte, para que ambas no
+ * puedan quedar incoherentes.
  */
 export async function guardarPerfilEgreso(
   _previo: EstadoPerfilEgreso,
   formulario: FormData
 ): Promise<EstadoPerfilEgreso> {
-  const { perfil } = await exigirRol(['admin'])
+  const { perfil, alcance } = await exigirRol(['admin', 'coordinador'], '/admin/perfil-egreso')
 
-  const universidadId = Number(formulario.get('universidad_id'))
-  if (!Number.isInteger(universidadId) || universidadId <= 0) {
+  const programaId = Number(formulario.get('programa_id'))
+  if (!Number.isInteger(programaId) || programaId <= 0) {
     return { error: 'Selecciona un programa.' }
+  }
+
+  // Un coordinador sólo configura el perfil de su programa.
+  if (alcance.programaIds !== null && !alcance.programaIds.includes(programaId)) {
+    return { error: 'Ese programa está fuera de tu alcance.' }
   }
 
   const perfilEgreso = String(formulario.get('perfil_egreso') ?? '').trim()
@@ -51,27 +58,26 @@ export async function guardarPerfilEgreso(
 
   const db = clienteServidor()
 
-  // El programa debe existir y ser visible: sin esta comprobación, un id
-  // inventado en el formulario insertaría una fila huérfana.
-  const { data: universidad } = await db
-    .from('universidades')
-    .select('id')
-    .eq('id', universidadId)
+  const { data: programa } = await db
+    .from('programas')
+    .select('id, universidad_id')
+    .eq('id', programaId)
     .maybeSingle()
 
-  if (!universidad) return { error: 'El programa indicado no existe.' }
+  if (!programa) return { error: 'El programa indicado no existe.' }
 
   const { error } = await db
     .from('perfiles_egreso')
     .upsert(
       {
-        universidad_id: universidadId,
+        programa_id: programaId,
+        universidad_id: programa.universidad_id,
         perfil_egreso: perfilEgreso,
         notas: notas || null,
         activo,
         actualizado_por: perfil.id,
       },
-      { onConflict: 'universidad_id' }
+      { onConflict: 'programa_id' }
     )
 
   if (error) {
@@ -80,6 +86,16 @@ export async function guardarPerfilEgreso(
         error:
           'Falta la tabla atlas.perfiles_egreso. Aplica la migración ' +
           'supabase/migraciones/06_perfil_egreso.sql desde el SQL Editor.',
+      }
+    }
+    // La unique por universidad de la migración 06 sigue en pie: una
+    // universidad con dos programas sólo admite un perfil hasta la 18.
+    if (error.code === '23505' && /universidad/.test(error.message)) {
+      return {
+        error:
+          'Esta universidad ya tiene un perfil de egreso en otro programa. ' +
+          'Aplica supabase/migraciones/18_edicion_y_egreso_por_programa.sql ' +
+          'para permitir uno por programa.',
       }
     }
     return { error: `No se pudo guardar: ${error.message}` }
@@ -94,7 +110,7 @@ export async function guardarPerfilEgreso(
  * Un perfil inactivo se conserva pero no entra al contexto del agente.
  */
 export async function alternarActivoEgreso(formulario: FormData) {
-  await exigirRol(['admin'])
+  await exigirRol(['admin', 'coordinador'], '/admin/perfil-egreso')
 
   const id = Number(formulario.get('id'))
   if (!Number.isInteger(id)) return
