@@ -5,6 +5,7 @@ import { inicioDe, perfilPuedeVer, INICIO_POR_ROL } from '@/lib/auth/alcance'
 import { Marco } from '@/componentes/marco'
 import { navegacionDe } from '@/lib/auth/navegacion'
 import { BotonEnlace } from '@/componentes/ui/boton'
+import { BienvenidaAnimada } from '@/componentes/bienvenida-animada'
 import { conteos } from '@/lib/kpi/consultas'
 import { indices } from '@/lib/kpi/indicadores'
 import { nivelDe, metaDe } from '@/lib/kpi/escala'
@@ -66,7 +67,8 @@ export default async function PaginaInicio() {
             className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-white/5"
             aria-hidden
           />
-          <div className="relative">
+          <div className="relative grid items-center gap-6 md:grid-cols-[1fr_auto]">
+           <div>
             <h2 className="text-2xl font-semibold tracking-tight text-white lg:text-3xl">
               Hola, {nombreCorto}
             </h2>
@@ -91,6 +93,11 @@ export default async function PaginaInicio() {
                 </Link>
               )}
             </div>
+           </div>
+
+            {/* La misma bienvenida animada de la portada: quien tiene sesión
+                nunca ve la portada (redirige aquí), así que vive también aquí. */}
+            <BienvenidaAnimada className="mx-auto w-full max-w-[220px] lg:max-w-[260px]" />
           </div>
         </section>
 
