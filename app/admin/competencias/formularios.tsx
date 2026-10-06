@@ -44,7 +44,7 @@ export function FormularioCompetencia() {
       <div className="grid gap-4 sm:grid-cols-[1fr_2fr]">
         <div>
           <label className="block text-sm font-medium text-slate-700">Código</label>
-          <input name="codigo" required placeholder="LD" className={`${CAMPO} uppercase`} />
+          <input name="codigo" required placeholder="LD" className={CAMPO} />
         </div>
         <div>
           <label className="block text-sm font-medium text-slate-700">Nombre</label>
@@ -116,7 +116,7 @@ export function FormularioDimension({ competencias }: { competencias: OpcionSimp
           <label className="block text-sm font-medium text-slate-700">
             Código <span className="font-normal text-texto-secundario">(auto)</span>
           </label>
-          <input name="codigo" placeholder="se genera" className={`${CAMPO} uppercase`} />
+          <input name="codigo" placeholder="se genera" className={CAMPO} />
         </div>
       </div>
 
@@ -179,7 +179,7 @@ export function FormularioIndicador({ dimensiones }: { dimensiones: OpcionSimple
           <label className="block text-sm font-medium text-slate-700">
             Código <span className="font-normal text-texto-secundario">(auto)</span>
           </label>
-          <input name="codigo" placeholder="se genera" className={`${CAMPO} uppercase`} />
+          <input name="codigo" placeholder="se genera" className={CAMPO} />
         </div>
       </div>
 

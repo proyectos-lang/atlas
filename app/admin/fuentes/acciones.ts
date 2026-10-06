@@ -18,7 +18,8 @@ export interface EstadoFuente {
   }
 }
 
-const CODIGO = /^[A-Za-z0-9_-]{2,30}$/
+// El código es libre: cualquier texto no vacío. Sólo tiene que ser único,
+// y eso lo garantiza la base (23505).
 
 const TRANSFORMACIONES = ['Directo', 'Escalar', 'Normalizar', 'Booleano']
 
@@ -45,13 +46,13 @@ export async function crearFuente(
 ): Promise<EstadoFuente> {
   await exigirRol(['admin'])
 
-  const codigo = texto(formulario.get('codigo')).toUpperCase()
+  const codigo = texto(formulario.get('codigo'))
   const nombre = texto(formulario.get('nombre'))
   const categoria = texto(formulario.get('categoria'))
   const modoIngreso = texto(formulario.get('modo_ingreso'))
   const descripcion = texto(formulario.get('descripcion'))
 
-  if (!CODIGO.test(codigo)) return { error: 'Código no válido.' }
+  if (!codigo) return { error: 'Escribe un código.' }
   if (nombre.length < 2) return { error: 'El nombre de la fuente es obligatorio.' }
 
   const db = clienteServidor()

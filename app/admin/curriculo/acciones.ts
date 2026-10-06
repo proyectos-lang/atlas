@@ -13,7 +13,8 @@ export interface EstadoCurriculo {
   nombre?: string
 }
 
-const CODIGO = /^[A-Za-z0-9_-]{2,30}$/
+// El código es libre: cualquier texto no vacío. Sólo tiene que ser único,
+// y eso lo garantiza la base (23505).
 
 function texto(v: FormDataEntryValue | null): string {
   return String(v ?? '').trim()
@@ -48,13 +49,13 @@ export async function crearInstitucion(
 ): Promise<EstadoCurriculo> {
   await exigirRol(['admin'])
 
-  const codigo = texto(formulario.get('codigo')).toUpperCase()
+  const codigo = texto(formulario.get('codigo'))
   const nombre = texto(formulario.get('nombre'))
   const siglas = texto(formulario.get('siglas'))
   const pais = texto(formulario.get('pais'))
   const universidadId = numeroONulo(formulario.get('universidad_id'))
 
-  if (!CODIGO.test(codigo)) return { error: 'Código no válido.' }
+  if (!codigo) return { error: 'Escribe un código.' }
   if (nombre.length < 3) return { error: 'El nombre de la institución es obligatorio.' }
 
   const db = clienteServidor()
@@ -77,11 +78,11 @@ export async function crearFacultad(
 ): Promise<EstadoCurriculo> {
   await exigirRol(['admin'])
 
-  const codigo = texto(formulario.get('codigo')).toUpperCase()
+  const codigo = texto(formulario.get('codigo'))
   const nombre = texto(formulario.get('nombre'))
   const institucionId = numeroONulo(formulario.get('institucion_id'))
 
-  if (!CODIGO.test(codigo)) return { error: 'Código no válido.' }
+  if (!codigo) return { error: 'Escribe un código.' }
   if (nombre.length < 3) return { error: 'El nombre de la facultad es obligatorio.' }
   if (institucionId === null) return { error: 'Selecciona una institución.' }
 
@@ -216,12 +217,12 @@ export async function crearArea(
 ): Promise<EstadoCurriculo> {
   await exigirRol(['admin'])
 
-  const codigo = texto(formulario.get('codigo')).toUpperCase()
+  const codigo = texto(formulario.get('codigo'))
   const nombre = texto(formulario.get('nombre'))
   const programaId = numeroONulo(formulario.get('programa_id'))
   const tipo = texto(formulario.get('tipo'))
 
-  if (!CODIGO.test(codigo)) return { error: 'Código no válido.' }
+  if (!codigo) return { error: 'Escribe un código.' }
   if (nombre.length < 3) return { error: 'El nombre del área es obligatorio.' }
   if (programaId === null) return { error: 'Selecciona un programa.' }
 
@@ -244,11 +245,11 @@ export async function crearLinea(
 ): Promise<EstadoCurriculo> {
   await exigirRol(['admin'])
 
-  const codigo = texto(formulario.get('codigo')).toUpperCase()
+  const codigo = texto(formulario.get('codigo'))
   const nombre = texto(formulario.get('nombre'))
   const programaId = numeroONulo(formulario.get('programa_id'))
 
-  if (!CODIGO.test(codigo)) return { error: 'Código no válido.' }
+  if (!codigo) return { error: 'Escribe un código.' }
   if (nombre.length < 3) return { error: 'El nombre de la línea es obligatorio.' }
   if (programaId === null) return { error: 'Selecciona un programa.' }
 
@@ -338,7 +339,7 @@ export async function crearUnidad(
 
   const cursoId = numeroONulo(formulario.get('curso_id'))
   const nombre = texto(formulario.get('nombre'))
-  let codigo = texto(formulario.get('codigo')).toUpperCase()
+  let codigo = texto(formulario.get('codigo'))
 
   if (cursoId === null) return { error: 'Selecciona una asignatura.' }
   if (nombre.length < 3) return { error: 'El nombre de la unidad es obligatorio.' }
@@ -352,7 +353,7 @@ export async function crearUnidad(
     codigo = `U${String((count ?? 0) + 1).padStart(2, '0')}`
   }
 
-  if (!CODIGO.test(codigo)) return { error: 'Código no válido.' }
+  if (!codigo) return { error: 'Escribe un código.' }
 
   const semanaInicio = numeroONulo(formulario.get('semana_inicio'))
   const semanaFin = numeroONulo(formulario.get('semana_fin'))
@@ -391,7 +392,7 @@ export async function crearResultado(
 ): Promise<EstadoCurriculo> {
   await exigirRol(['admin', 'coordinador', 'docente'])
 
-  const codigo = texto(formulario.get('codigo')).toUpperCase()
+  const codigo = texto(formulario.get('codigo'))
   const enunciado = texto(formulario.get('enunciado'))
   const ambito = texto(formulario.get('ambito'))
   const competenciaId = numeroONulo(formulario.get('competencia_id'))
@@ -399,7 +400,7 @@ export async function crearResultado(
   const areaId = numeroONulo(formulario.get('area_id'))
   const cursoId = numeroONulo(formulario.get('curso_id'))
 
-  if (!CODIGO.test(codigo)) return { error: 'Código no válido.' }
+  if (!codigo) return { error: 'Escribe un código.' }
   if (enunciado.length < 15) {
     return {
       error:

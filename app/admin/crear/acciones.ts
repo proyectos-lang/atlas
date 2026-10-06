@@ -22,7 +22,8 @@ export interface EstadoCreacion {
   nombre?: string
 }
 
-const CODIGO = /^[A-Za-z0-9_-]{2,20}$/
+// El código es libre: cualquier texto no vacío. Sólo tiene que ser único,
+// y eso lo garantiza la base (23505).
 
 function texto(v: FormDataEntryValue | null): string {
   return String(v ?? '').trim()
@@ -66,13 +67,13 @@ export async function crearUniversidad(
 
   const nombre = texto(formulario.get('nombre'))
   const modalidad = texto(formulario.get('modalidad'))
-  let codigo = texto(formulario.get('codigo')).toUpperCase()
+  let codigo = texto(formulario.get('codigo'))
 
   if (nombre.length < 3) return { error: 'El nombre de la universidad es obligatorio.' }
 
   if (!codigo) codigo = await siguienteCodigo('universidades', 'U')
-  if (!CODIGO.test(codigo)) {
-    return { error: 'El código debe tener entre 2 y 20 caracteres: letras, dígitos o guiones.' }
+  if (!codigo) {
+    return { error: 'Escribe un código.' }
   }
 
   const db = clienteServidor()
@@ -121,7 +122,7 @@ export async function crearCurso(
   const nombre = texto(formulario.get('nombre'))
   const semanas = entero(formulario.get('semanas')) ?? 6
   const periodo = texto(formulario.get('periodo'))
-  let codigo = texto(formulario.get('codigo')).toUpperCase()
+  let codigo = texto(formulario.get('codigo'))
 
   if (programaId === null) return { error: 'Selecciona el programa al que pertenece.' }
   if (nombre.length < 3) return { error: 'El nombre del curso es obligatorio.' }
@@ -138,8 +139,8 @@ export async function crearCurso(
   if (!programa) return { error: 'El programa indicado no existe.' }
 
   if (!codigo) codigo = await siguienteCodigo('cursos', 'C')
-  if (!CODIGO.test(codigo)) {
-    return { error: 'El código debe tener entre 2 y 20 caracteres: letras, dígitos o guiones.' }
+  if (!codigo) {
+    return { error: 'Escribe un código.' }
   }
 
   const { data, error } = await db

@@ -482,7 +482,7 @@ function PasoDatos({
             <label className="block text-sm font-medium text-slate-700">
               Código <span className="font-normal text-texto-secundario">(auto)</span>
             </label>
-            <input name="codigo" placeholder="se genera" className={`${CAMPO} uppercase`} />
+            <input name="codigo" placeholder="se genera" className={CAMPO} />
           </div>
         )}
       </div>

@@ -50,7 +50,8 @@ export interface Entidad {
 }
 
 const CODIGO: CampoEditable = {
-  columna: 'codigo', etiqueta: 'Código', tipo: 'texto', minimo: 2, maximo: 30,
+  // Libre: cualquier texto. Sólo no puede quedar vacío (la columna es NOT NULL).
+  columna: 'codigo', etiqueta: 'Código', tipo: 'texto', minimo: 1,
 }
 
 const MODALIDAD: CampoEditable = {
@@ -393,8 +394,7 @@ export function validarCampo(
       if (campo.maximo !== undefined && texto.length > campo.maximo) {
         return { error: `${campo.etiqueta} supera los ${campo.maximo} caracteres.` }
       }
-      // Los códigos van en mayúsculas, como en todas las pantallas de alta.
-      return { valor: campo.columna === 'codigo' ? texto.toUpperCase() : texto }
+      return { valor: texto }
     }
   }
 }

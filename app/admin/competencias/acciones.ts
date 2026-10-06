@@ -10,7 +10,8 @@ export interface EstadoCompetencia {
   ok?: string
 }
 
-const CODIGO = /^[A-Za-z0-9_-]{2,30}$/
+// El código es libre: cualquier texto no vacío. Sólo tiene que ser único,
+// y eso lo garantiza la base (23505).
 
 const AGREGACIONES = ['Promedio', 'Suma', 'Proporcion', 'Conteo', 'Rubrica']
 const ESCALAS = ['Porcentaje', 'Puntos']
@@ -46,14 +47,14 @@ export async function crearCompetencia(
 ): Promise<EstadoCompetencia> {
   await exigirRol(['admin'])
 
-  const codigo = texto(formulario.get('codigo')).toUpperCase()
+  const codigo = texto(formulario.get('codigo'))
   const nombre = texto(formulario.get('nombre'))
   const descripcion = texto(formulario.get('descripcion'))
   const studentOutcome = texto(formulario.get('student_outcome'))
   const transversal = formulario.get('transversal') !== null
 
-  if (!CODIGO.test(codigo)) {
-    return { error: 'El código debe tener entre 2 y 30 caracteres: letras, dígitos o guiones.' }
+  if (!codigo) {
+    return { error: 'Escribe un código.' }
   }
   if (nombre.length < 3) return { error: 'El nombre de la competencia es obligatorio.' }
 
@@ -93,7 +94,7 @@ export async function crearDimension(
   const competenciaId = numeroONulo(formulario.get('competencia_id'))
   const nombre = texto(formulario.get('nombre'))
   const descripcion = texto(formulario.get('descripcion'))
-  let codigo = texto(formulario.get('codigo')).toUpperCase()
+  let codigo = texto(formulario.get('codigo'))
 
   if (competenciaId === null) return { error: 'Selecciona una competencia.' }
   if (nombre.length < 3) return { error: 'El nombre de la dimensión es obligatorio.' }
@@ -114,7 +115,7 @@ export async function crearDimension(
     codigo = `${String(comp.codigo)}-D${(count ?? 0) + 1}`
   }
 
-  if (!CODIGO.test(codigo)) return { error: 'Código de dimensión no válido.' }
+  if (!codigo) return { error: 'Escribe un código para la dimensión.' }
 
   const { error } = await db.from('dimensiones').insert({
     codigo,
@@ -164,7 +165,7 @@ export async function crearIndicador(
   const umbral = numeroONulo(formulario.get('umbral'))
   const truncar = formulario.get('trunca_100') !== null
   const prorratea = formulario.get('prorratea') !== null
-  let codigo = texto(formulario.get('codigo')).toUpperCase()
+  let codigo = texto(formulario.get('codigo'))
 
   if (dimensionId === null) return { error: 'Selecciona una dimensión.' }
   if (nombre.length < 3) return { error: 'El nombre del indicador es obligatorio.' }
@@ -204,7 +205,7 @@ export async function crearIndicador(
     codigo = `${String(dim.codigo)}-I${(count ?? 0) + 1}`
   }
 
-  if (!CODIGO.test(codigo)) return { error: 'Código de indicador no válido.' }
+  if (!codigo) return { error: 'Escribe un código para el indicador.' }
 
   const { error } = await db.from('indicadores').insert({
     codigo,

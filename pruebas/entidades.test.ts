@@ -105,8 +105,18 @@ describe('validarCampo protege contra lo que un formulario puede traer', () => {
     expect(validarCampo(nombre, '  Lógica ')).toEqual({ valor: 'Lógica' })
   })
 
-  it('los códigos se guardan en mayúsculas, como en las pantallas de alta', () => {
-    expect(validarCampo(codigo, 'c04')).toEqual({ valor: 'C04' })
+  it('el código es libre: se guarda tal cual lo escribe el usuario', () => {
+    const libre = entidadDe('cursos')!.campos.find((c) => c.columna === 'codigo')!
+    expect(validarCampo(libre, 'c04')).toEqual({ valor: 'c04' })
+    expect(validarCampo(libre, ' Ing. Sistemas 2026/1 ')).toEqual({ valor: 'Ing. Sistemas 2026/1' })
+    expect(validarCampo(libre, 'X')).toEqual({ valor: 'X' })
+    expect(validarCampo(libre, 'Ñ'.repeat(200))).toEqual({ valor: 'Ñ'.repeat(200) })
+  })
+
+  it('el código sólo no puede quedar vacío: la columna es obligatoria', () => {
+    const libre = entidadDe('cursos')!.campos.find((c) => c.columna === 'codigo')!
+    expect(validarCampo(libre, '   ')).toEqual({ error: 'Código no puede quedar vacío.' })
+    expect(validarCampo(codigo, 'c04')).toEqual({ valor: 'c04' })
   })
 
   it('un número fuera de rango o que no es número se rechaza', () => {

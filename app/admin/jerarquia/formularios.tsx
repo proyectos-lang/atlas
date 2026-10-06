@@ -62,7 +62,7 @@ export function FormularioPrograma({ universidades }: { universidades: Opcion[] 
             name="codigo"
             required
             placeholder="P04"
-            className={`${CAMPO} uppercase`}
+            className={CAMPO}
           />
         </div>
         <div>
@@ -143,7 +143,7 @@ export function FormularioGrupo({
           <input
             name="codigo"
             placeholder="se genera solo"
-            className={`${CAMPO} uppercase`}
+            className={CAMPO}
           />
         </div>
       </div>

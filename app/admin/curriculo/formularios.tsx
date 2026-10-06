@@ -75,7 +75,7 @@ export function FormularioInstitucion({ universidades }: { universidades: Opcion
       <div className="grid gap-4 sm:grid-cols-[1fr_2fr]">
         <div>
           <label className="block text-sm font-medium text-slate-700">Código</label>
-          <input name="codigo" required placeholder="INS01" className={`${CAMPO} uppercase`} />
+          <input name="codigo" required placeholder="INS01" className={CAMPO} />
         </div>
         <div>
           <label className="block text-sm font-medium text-slate-700">Nombre</label>
@@ -142,7 +142,7 @@ export function FormularioFacultad({ instituciones }: { instituciones: Opcion[] 
       <div className="grid gap-4 sm:grid-cols-[1fr_2fr]">
         <div>
           <label className="block text-sm font-medium text-slate-700">Código</label>
-          <input name="codigo" required placeholder="FAC01" className={`${CAMPO} uppercase`} />
+          <input name="codigo" required placeholder="FAC01" className={CAMPO} />
         </div>
         <div>
           <label className="block text-sm font-medium text-slate-700">Nombre</label>
@@ -405,7 +405,7 @@ export function FormularioArea({ programas }: { programas: Opcion[] }) {
       <div className="grid gap-4 sm:grid-cols-[1fr_2fr]">
         <div>
           <label className="block text-sm font-medium text-slate-700">Código</label>
-          <input name="codigo" required placeholder="AR01" className={`${CAMPO} uppercase`} />
+          <input name="codigo" required placeholder="AR01" className={CAMPO} />
         </div>
         <div>
           <label className="block text-sm font-medium text-slate-700">Nombre</label>
@@ -446,7 +446,7 @@ export function FormularioLinea({ programas }: { programas: Opcion[] }) {
       <div className="grid gap-4 sm:grid-cols-[1fr_2fr]">
         <div>
           <label className="block text-sm font-medium text-slate-700">Código</label>
-          <input name="codigo" required placeholder="LC01" className={`${CAMPO} uppercase`} />
+          <input name="codigo" required placeholder="LC01" className={CAMPO} />
         </div>
         <div>
           <label className="block text-sm font-medium text-slate-700">Nombre</label>
@@ -622,7 +622,7 @@ export function FormularioUnidad({ cursos }: { cursos: Opcion[] }) {
           <label className="block text-sm font-medium text-slate-700">
             Código <span className="font-normal text-texto-secundario">(auto)</span>
           </label>
-          <input name="codigo" placeholder="se genera" className={`${CAMPO} uppercase`} />
+          <input name="codigo" placeholder="se genera" className={CAMPO} />
         </div>
       </div>
 
@@ -717,7 +717,7 @@ export function FormularioResultado({
       <div className="grid gap-4 sm:grid-cols-[1fr_2fr]">
         <div>
           <label className="block text-sm font-medium text-slate-700">Código</label>
-          <input name="codigo" required placeholder="RA01" className={`${CAMPO} uppercase`} />
+          <input name="codigo" required placeholder="RA01" className={CAMPO} />
         </div>
         <div>
           <label className="block text-sm font-medium text-slate-700">

@@ -14,7 +14,8 @@ export interface EstadoJerarquia {
 }
 
 /** Códigos de negocio: letras, dígitos y guiones. Se usan en la URL. */
-const CODIGO = /^[A-Za-z0-9_-]{2,20}$/
+// El código es libre: cualquier texto no vacío. Sólo tiene que ser único,
+// y eso lo garantiza la base (23505).
 
 function texto(v: FormDataEntryValue | null): string {
   return String(v ?? '').trim()
@@ -46,13 +47,13 @@ export async function crearPrograma(
 ): Promise<EstadoJerarquia> {
   await exigirRol(['admin'])
 
-  const codigo = texto(formulario.get('codigo')).toUpperCase()
+  const codigo = texto(formulario.get('codigo'))
   const nombre = texto(formulario.get('nombre'))
   const universidadId = entero(formulario.get('universidad_id'))
   const modalidad = texto(formulario.get('modalidad'))
 
-  if (!CODIGO.test(codigo)) {
-    return { error: 'El código debe tener entre 2 y 20 caracteres: letras, dígitos o guiones.' }
+  if (!codigo) {
+    return { error: 'Escribe un código.' }
   }
   if (nombre.length < 3) return { error: 'El nombre del programa es obligatorio.' }
   if (universidadId === null) return { error: 'Selecciona una universidad.' }
@@ -96,7 +97,7 @@ export async function crearGrupo(
   const nombre = texto(formulario.get('nombre'))
   const docenteId = entero(formulario.get('docente_id'))
   const periodo = texto(formulario.get('periodo'))
-  let codigo = texto(formulario.get('codigo')).toUpperCase()
+  let codigo = texto(formulario.get('codigo'))
 
   if (cursoId === null) return { error: 'Selecciona un curso.' }
   if (nombre.length < 2) return { error: 'El nombre del grupo es obligatorio.' }
@@ -117,8 +118,8 @@ export async function crearGrupo(
     codigo = `${String(curso.codigo)}-G${(count ?? 0) + 1}`
   }
 
-  if (!CODIGO.test(codigo)) {
-    return { error: 'El código debe tener entre 2 y 20 caracteres: letras, dígitos o guiones.' }
+  if (!codigo) {
+    return { error: 'Escribe un código.' }
   }
 
   const { data, error } = await db.from('grupos').insert({
