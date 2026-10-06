@@ -90,3 +90,26 @@ export async function revertirCuenta(perfilId: number, authUserId: string): Prom
   await db.from('perfiles').delete().eq('id', perfilId)
   await clienteAuthAdmin().auth.admin.deleteUser(authUserId)
 }
+
+/**
+ * Cambia correo y/o contraseña de una cuenta existente.
+ *
+ * El correo vive en dos sitios (Supabase Auth, con el que se entra, y
+ * `perfiles.email`, el que se muestra); quien llame aquí debe actualizar
+ * también el perfil, y sólo si esto fue bien.
+ */
+export async function actualizarCredenciales(
+  authUserId: string,
+  cambios: { email?: string; password?: string }
+): Promise<string | null> {
+  if (!cambios.email && !cambios.password) return null
+  const { error } = await clienteAuthAdmin().auth.admin.updateUserById(authUserId, {
+    ...(cambios.email ? { email: cambios.email, email_confirm: true } : {}),
+    ...(cambios.password ? { password: cambios.password } : {}),
+  })
+  if (!error) return null
+  if (/already|registered|exists/i.test(error.message)) {
+    return `Ya existe otra cuenta con el correo ${cambios.email}.`
+  }
+  return `No se pudo actualizar la cuenta: ${error.message}`
+}

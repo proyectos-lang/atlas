@@ -138,6 +138,17 @@ export async function estudiantes(alcance: Alcance): Promise<Estudiante[]> {
     universidad: 'universidad_id', curso: 'curso_id',
     grupo: 'grupo_id', usuario: 'id',
   })
+  // `usuarios` no tiene programa: un alcance por programa (coordinador) se
+  // resuelve a los cursos de ese programa. Sin esto, ceñir lo ignoraba y
+  // el coordinador veía estudiantes de cualquier programa.
+  if (alcance.programaIds !== null) {
+    const { data: cursosProg, error: eCursos } = await db
+      .from('cursos').select('id').in('programa_id', alcance.programaIds)
+    if (eCursos && !faltaMigracion(eCursos.code)) {
+      throw new Error(`cursos del programa: ${eCursos.message}`)
+    }
+    if (!eCursos) q = q.in('curso_id', (cursosProg ?? []).map((c) => Number(c.id)))
+  }
   const { data, error } = await q
   if (error) throw new Error(`usuarios: ${error.message}`)
   return (data ?? []).map((u) => ({

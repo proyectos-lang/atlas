@@ -1,6 +1,7 @@
 'use client'
 
 import { useActionState, useState } from 'react'
+import { Pencil } from 'lucide-react'
 import { BotonEnvio } from '@/componentes/ui/boton-envio'
 import {
   editarEntidad, eliminarEntidad, alternarEntidad, type EstadoEntidad,
@@ -58,7 +59,11 @@ export function EditorEntidad({
 
   return (
     <details className="group mt-1">
-      <summary className={`cursor-pointer list-none ${enlace}`}>
+      <summary
+        className={`inline-flex cursor-pointer list-none items-center gap-1 ${enlace}`}
+        title={`Editar ${nombre}`}
+      >
+        <Pencil size={compacto ? 11 : 12} aria-hidden />
         Editar
       </summary>
 
@@ -94,7 +99,7 @@ export function EditorEntidad({
                     type={c.tipo === 'numero' ? 'number' : 'text'}
                     step={c.tipo === 'numero' ? 'any' : undefined}
                     defaultValue={c.valor}
-                    className={`${CAMPO}${c.columna === 'codigo' ? ' uppercase' : ''}`}
+                    className={CAMPO}
                   />
                 )}
               </div>

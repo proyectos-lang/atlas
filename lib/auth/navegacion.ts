@@ -61,6 +61,7 @@ const GRUPOS: readonly { titulo: string; items: readonly ItemNav[] }[] = [
       { ruta: '/admin/fuentes', etiqueta: 'Fuentes de datos', pie: 'De dónde vienen las evidencias', icono: 'ajustes' },
       { ruta: '/admin/jerarquia', etiqueta: 'Jerarquía académica', pie: 'Programas, cursos y grupos', icono: 'institucion' },
       { ruta: '/admin/perfil-egreso', etiqueta: 'Perfil de egreso', pie: 'Contexto para el análisis de IA', icono: 'ayuda' },
+      { ruta: '/admin/estudiantes', etiqueta: 'Estudiantes', pie: 'Listado y edición', icono: 'persona' },
       { ruta: '/admin/perfiles', etiqueta: 'Perfiles de acceso', pie: 'Quién entra y qué ve', icono: 'persona' },
     ],
   },

@@ -6,6 +6,7 @@ import { cursos, estudiantes, universidades, programas, grupos as gruposDeCurso 
 import { FormularioPerfil } from './formulario'
 import { alternarActivo } from './acciones'
 import { EditorModulos } from './editor-modulos'
+import { EditorPerfil } from './editor-perfil'
 import { catalogoModulos } from '@/lib/auth/navegacion'
 import { RUTAS_POR_ROL, type Rol } from '@/lib/auth/alcance'
 
@@ -30,7 +31,7 @@ export default async function PaginaPerfiles() {
   const db = clienteServidor()
   const { data: perfiles } = await db
     .from('perfiles')
-    .select('id, nombre, email, rol, universidad_id, curso_id, usuario_id, activo, modulos')
+    .select('id, nombre, email, rol, universidad_id, programa_id, curso_id, grupo_id, usuario_id, activo, modulos')
     .order('id')
 
   // Catálogo de módulos y el valor por defecto de cada rol, para el selector.
@@ -44,14 +45,31 @@ export default async function PaginaPerfiles() {
 
   const nombreUniv = new Map(listaUniv.map((u) => [u.id, u.universidad]))
   const nombreCurso = new Map(listaCursos.map((c) => [c.id, c.nombre]))
+
+  // Opciones del lápiz de cada perfil.
+  const opUniv = listaUniv.map((u) => ({ id: u.id, etiqueta: u.universidad }))
+  const opProg = listaProg.map((p) => ({ id: p.id, etiqueta: p.nombre }))
+  const opCursos = listaCursos.map((c) => ({ id: c.id, etiqueta: c.nombre }))
+  const opGrupos = listaGrupos.map((g) => ({
+    id: g.id,
+    etiqueta: `${nombreCurso.get(g.cursoId) ?? 'Curso'} — ${g.nombre} (${g.codigo})`,
+  }))
+  const opEst = listaEst.map((e) => ({ id: e.id, etiqueta: `${e.codigo} · ${e.nombre}` }))
   const nombreEst = new Map(listaEst.map((e) => [e.id, e.codigo]))
 
   const ambitoDe = (p: {
-    rol: string; universidad_id: number | null
+    id: number; rol: string; universidad_id: number | null
     curso_id: number | null; usuario_id: number | null
   }) => {
     if (p.rol === 'admin') return 'Todas las universidades'
     if (p.usuario_id !== null) return nombreEst.get(Number(p.usuario_id)) ?? '—'
+    // El docente ve sus grupos asignados (y el curso completo, si lo tiene).
+    const suyos = listaGrupos.filter((g) => g.docenteId === Number(p.id))
+    if (p.rol === 'docente' && suyos.length > 0) {
+      const lista = suyos.map((g) => `${nombreCurso.get(g.cursoId) ?? 'Curso'} · ${g.nombre}`)
+      return (p.curso_id !== null ? [`${nombreCurso.get(Number(p.curso_id)) ?? '—'} (completo)`] : [])
+        .concat(lista).join(', ')
+    }
     if (p.curso_id !== null) return nombreCurso.get(Number(p.curso_id)) ?? '—'
     if (p.universidad_id !== null) return nombreUniv.get(Number(p.universidad_id)) ?? '—'
     return 'sin alcance asignado'
@@ -113,6 +131,30 @@ export default async function PaginaPerfiles() {
                     <td className="py-2 pr-3">
                       <div className="font-medium">{String(p.nombre)}</div>
                       <div className="text-xs text-texto-secundario">{String(p.email)}</div>
+                      <EditorPerfil
+                        valores={{
+                          id: Number(p.id),
+                          nombre: String(p.nombre),
+                          email: String(p.email),
+                          rol: String(p.rol),
+                          universidadId: p.universidad_id == null ? null : Number(p.universidad_id),
+                          programaId: p.programa_id == null ? null : Number(p.programa_id),
+                          // Con grupo fijo (configuración antigua) el curso no
+                          // significaba «curso completo»: se muestra el grupo.
+                          cursoId: p.curso_id == null || p.grupo_id != null ? null : Number(p.curso_id),
+                          usuarioId: p.usuario_id == null ? null : Number(p.usuario_id),
+                          grupos: [
+                            ...listaGrupos.filter((g) => g.docenteId === Number(p.id)).map((g) => g.id),
+                            ...(p.grupo_id != null ? [Number(p.grupo_id)] : []),
+                          ],
+                        }}
+                        universidades={opUniv}
+                        programas={opProg}
+                        cursos={opCursos}
+                        grupos={opGrupos}
+                        estudiantes={opEst}
+                        esUnoMismo={Number(p.id) === perfil.id}
+                      />
                       <EditorModulos
                         perfilId={Number(p.id)}
                         nombre={String(p.nombre).split(' ')[0]}

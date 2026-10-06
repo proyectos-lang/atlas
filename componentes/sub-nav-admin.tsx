@@ -23,6 +23,11 @@ const SECCIONES: readonly { ruta: string; etiqueta: string; pie: string }[] = [
     pie: 'Quién entra y qué alcance tiene',
   },
   {
+    ruta: '/admin/estudiantes',
+    etiqueta: 'Estudiantes',
+    pie: 'Listado y edición',
+  },
+  {
     ruta: '/admin/jerarquia',
     etiqueta: 'Jerarquía académica',
     pie: 'Programas, cursos y grupos',
