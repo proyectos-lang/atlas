@@ -19,7 +19,7 @@ export async function generar(
   _previo: EstadoGeneracion,
   formulario: FormData
 ): Promise<EstadoGeneracion> {
-  const { alcance } = await exigirRol(['asesor', 'admin', 'coordinador'])
+  const { alcance } = await exigirRol(['asesor', 'admin', 'coordinador'], '/asesor')
 
   const cursoCodigo = String(formulario.get('curso') ?? '').trim()
   const estudianteCodigo = String(formulario.get('estudiante') ?? '').trim()

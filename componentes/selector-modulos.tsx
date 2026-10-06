@@ -86,7 +86,9 @@ export function SelectorModulos({
             <div className="mt-1.5 space-y-1">
               {g.items.map((i) => {
                 const marcado = marcados.has(i.ruta)
-                const delRol = porDefecto.includes(i.ruta)
+                // Por prefijo, como el resto de permisos: el rol docente trae
+                // `/docente`, y eso ya incluye `/docente/revision`.
+                const delRol = porDefecto.some((r) => i.ruta === r || i.ruta.startsWith(`${r}/`))
 
                 return (
                   <label
@@ -106,8 +108,11 @@ export function SelectorModulos({
                       <span className="block text-sm leading-tight text-slate-800">
                         {i.etiqueta}
                         {!delRol && marcado && (
-                          <span className="ml-1.5 text-[10px] font-medium text-amber-700">
-                            fuera de su rol
+                          <span
+                            className="ml-1.5 text-[10px] font-medium text-institucional"
+                            title="No viene con su rol por defecto; se le concede aparte. Funciona igual."
+                          >
+                            adicional
                           </span>
                         )}
                       </span>

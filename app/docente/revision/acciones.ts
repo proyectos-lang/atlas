@@ -63,7 +63,7 @@ async function cargar(id: number) {
  * revisar recomendaciones de cualquier curso.
  */
 async function verificarAcceso(cursoId: number) {
-  const { perfil, alcance } = await exigirRol(['docente', 'admin', 'coordinador'])
+  const { perfil, alcance } = await exigirRol(['docente', 'admin', 'coordinador'], '/docente/revision')
   if (alcance.cursoIds !== null && !alcance.cursoIds.includes(cursoId)) {
     throw new Error('Esa recomendación no pertenece a tu curso')
   }

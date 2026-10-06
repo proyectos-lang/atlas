@@ -23,7 +23,10 @@ export async function generar(
   _previo: EstadoGeneracion,
   formulario: FormData
 ): Promise<EstadoGeneracion> {
-  const { alcance } = await exigirRol(['asesor', 'admin', 'coordinador'])
+  // Con la ruta: un perfil al que se le concedió el módulo (p. ej. un
+  // docente) puede generar, no sólo ver la página. Su alcance sigue
+  // ciñendo los datos a sus grupos.
+  const { alcance } = await exigirRol(['asesor', 'admin', 'coordinador'], '/recomendador')
 
   if (!process.env.ANTHROPIC_API_KEY) {
     return { error: 'Falta ANTHROPIC_API_KEY en el entorno del servidor.' }
