@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { clienteServidor } from '@/lib/supabase/servidor'
 import { exigirRol } from '@/lib/auth/sesion'
 import { faltaMigracion } from '@/lib/supabase/migracion-pendiente'
+import { subirPlanEstudios, borrarArchivo } from '@/lib/documentos/almacen'
 
 export interface EstadoCurriculo {
   error?: string
@@ -109,6 +110,55 @@ export async function guardarMacro(
   if (programaId === null) return { error: 'Selecciona un programa.' }
 
   const db = clienteServidor()
+
+  // ---------- Plan de estudios en PDF ----------
+  // El archivo se sube ANTES del upsert: si falla, no se guarda nada y la
+  // ficha queda como estaba. Al revés, un upsert correcto con subida
+  // fallida dejaría la ficha apuntando a un archivo que no existe.
+  const pdf = formulario.get('plan_estudios_pdf')
+  const quitarPdf = formulario.get('quitar_pdf') !== null
+
+  // Lo que hay guardado hoy, para borrarlo sólo si todo lo demás sale bien.
+  const { data: previo } = await db
+    .from('programas_macro')
+    .select('plan_estudios_archivo')
+    .eq('programa_id', programaId)
+    .maybeSingle()
+
+  const rutaPrevia =
+    previo?.plan_estudios_archivo == null
+      ? null
+      : String(previo.plan_estudios_archivo)
+
+  let archivo: {
+    plan_estudios_archivo: string | null
+    plan_estudios_nombre: string | null
+    plan_estudios_tamano: number | null
+    plan_estudios_subido_en: string | null
+    plan_estudios_subido_por: number | null
+  } | null = null
+
+  if (pdf instanceof File && pdf.size > 0) {
+    const subido = await subirPlanEstudios(programaId, pdf)
+    if ('error' in subido) return { error: subido.error }
+
+    archivo = {
+      plan_estudios_archivo: subido.ruta,
+      plan_estudios_nombre: subido.nombre,
+      plan_estudios_tamano: subido.tamano,
+      plan_estudios_subido_en: new Date().toISOString(),
+      plan_estudios_subido_por: perfil.id,
+    }
+  } else if (quitarPdf) {
+    archivo = {
+      plan_estudios_archivo: null,
+      plan_estudios_nombre: null,
+      plan_estudios_tamano: null,
+      plan_estudios_subido_en: null,
+      plan_estudios_subido_por: null,
+    }
+  }
+
   const { error } = await db.from('programas_macro').upsert(
     {
       programa_id: programaId,
@@ -116,6 +166,7 @@ export async function guardarMacro(
       perfil_egreso: texto(formulario.get('perfil_egreso')) || null,
       propositos: texto(formulario.get('propositos')) || null,
       plan_estudios: texto(formulario.get('plan_estudios')) || null,
+      ...(archivo ?? {}),
       modalidad: texto(formulario.get('modalidad')) || null,
       nivel: texto(formulario.get('nivel')) || null,
       duracion_semestres: numeroONulo(formulario.get('duracion_semestres')),
@@ -126,10 +177,31 @@ export async function guardarMacro(
     { onConflict: 'programa_id' }
   )
 
-  if (error) return { error: mensaje(error, 'una ficha macro') }
+  if (error) {
+    // El upsert falló pero el archivo ya está subido: se retira para no
+    // dejar huérfanos acumulándose en el bucket.
+    if (archivo?.plan_estudios_archivo) {
+      await borrarArchivo(archivo.plan_estudios_archivo)
+    }
+    return { error: mensaje(error, 'una ficha macro') }
+  }
+
+  // Ahora que la base apunta al archivo nuevo, el anterior ya no hace
+  // falta. Si este borrado falla, queda un archivo de más: molesto, pero
+  // inofensivo. Hacerlo antes habría arriesgado perder el único que había.
+  if (archivo && rutaPrevia && rutaPrevia !== archivo.plan_estudios_archivo) {
+    await borrarArchivo(rutaPrevia)
+  }
 
   revalidatePath('/admin/curriculo')
-  return { ok: 'Datos macro del programa guardados.' }
+  return {
+    ok:
+      archivo?.plan_estudios_archivo
+        ? `Datos macro guardados. Plan de estudios: ${archivo.plan_estudios_nombre}.`
+        : archivo
+          ? 'Datos macro guardados. Plan de estudios en PDF retirado.'
+          : 'Datos macro del programa guardados.',
+  }
 }
 
 // ============================================================

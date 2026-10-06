@@ -44,6 +44,7 @@ Ejecutar **en orden** desde el SQL Editor de Supabase:
 | 14 | `supabase/migraciones/14_analitica.sql` | analítica descriptiva, diagnóstica y predictiva |
 | 15 | `supabase/migraciones/15_arreglo_senales.sql` | corrige señales con ruido y clasificación |
 | 16 | `supabase/migraciones/16_intervenciones.sql` | recomendación sobre dimensiones e intervenciones |
+| 17 | `supabase/migraciones/17_plan_estudios_pdf.sql` | plan de estudios en PDF |
 
 > La migración 04 depende de que `usuarios` y `semanas` ya tengan datos.
 > Ejecutarla **después** de `npm run seed`.
@@ -216,6 +217,12 @@ Institución → Facultad → Programa              (macro)
 Se administra en dos pantallas: **Administración → Modelo curricular** para
 los tres niveles y los resultados de aprendizaje, y **Competencias e
 indicadores** para la medición.
+
+El plan general de estudios admite **texto y PDF a la vez**, y no son
+alternativas: el texto lo lee el agente de IA como contexto, un PDF no. El
+archivo vive en el bucket privado `atlas-documentos` y se sirve con URL
+firmada temporal; el acceso público está bloqueado. Se valida por la firma
+`%PDF-` del archivo, no por su extensión, que se puede renombrar.
 
 Los **resultados de aprendizaje** son el eslabón central: enlazados a los
 indicadores que los evidencian, son lo que permite responder «qué resultado

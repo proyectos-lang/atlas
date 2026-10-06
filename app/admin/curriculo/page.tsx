@@ -5,6 +5,7 @@ import { clienteServidor } from '@/lib/supabase/servidor'
 import { universidades, cursos as cursosDe, programas as programasDe } from '@/lib/kpi/consultas'
 import { arbolCompetencias, areas as areasDe, resultados as resultadosDe } from '@/lib/curriculo/modelo'
 import { faltaMigracion } from '@/lib/supabase/migracion-pendiente'
+import { urlFirmada, tamanoLegible } from '@/lib/documentos/almacen'
 import {
   FormularioInstitucion, FormularioFacultad, FormularioMacro,
   FormularioArea, FormularioLinea, FormularioUbicacion,
@@ -77,17 +78,36 @@ export default async function PaginaCurriculo() {
   const nombrePrograma = new Map(listaProg.map((p) => [p.id, p.nombre]))
   const nombreArea = new Map(listaAreas.map((a) => [a.id, a.nombre]))
 
-  const fichasMacro: FichaMacro[] = macros.map((m) => ({
-    programaId: Number(m.programa_id),
-    facultadId: m.facultad_id == null ? null : Number(m.facultad_id),
-    perfilEgreso: m.perfil_egreso == null ? '' : String(m.perfil_egreso),
-    propositos: m.propositos == null ? '' : String(m.propositos),
-    planEstudios: m.plan_estudios == null ? '' : String(m.plan_estudios),
-    modalidad: m.modalidad == null ? '' : String(m.modalidad),
-    nivel: m.nivel == null ? '' : String(m.nivel),
-    duracionSemestres: m.duracion_semestres == null ? null : Number(m.duracion_semestres),
-    abetAdoptado: Boolean(m.abet_adoptado),
-  }))
+  // El bucket es privado, así que cada archivo necesita su URL firmada.
+  // Se piden en paralelo: una por programa, y sólo para los que tienen
+  // documento cargado.
+  const fichasMacro: FichaMacro[] = await Promise.all(
+    macros.map(async (m) => {
+      const ruta =
+        m.plan_estudios_archivo == null ? null : String(m.plan_estudios_archivo)
+
+      return {
+        programaId: Number(m.programa_id),
+        facultadId: m.facultad_id == null ? null : Number(m.facultad_id),
+        perfilEgreso: m.perfil_egreso == null ? '' : String(m.perfil_egreso),
+        propositos: m.propositos == null ? '' : String(m.propositos),
+        planEstudios: m.plan_estudios == null ? '' : String(m.plan_estudios),
+        modalidad: m.modalidad == null ? '' : String(m.modalidad),
+        nivel: m.nivel == null ? '' : String(m.nivel),
+        duracionSemestres:
+          m.duracion_semestres == null ? null : Number(m.duracion_semestres),
+        abetAdoptado: Boolean(m.abet_adoptado),
+        planEstudiosArchivo: ruta,
+        planEstudiosNombre:
+          m.plan_estudios_nombre == null ? null : String(m.plan_estudios_nombre),
+        planEstudiosTamano:
+          m.plan_estudios_tamano == null
+            ? null
+            : tamanoLegible(Number(m.plan_estudios_tamano)),
+        planEstudiosUrl: ruta === null ? null : await urlFirmada(ruta),
+      }
+    })
+  )
 
   const fichasMicro: FichaMicro[] = micros.map((m) => ({
     cursoId: Number(m.curso_id),

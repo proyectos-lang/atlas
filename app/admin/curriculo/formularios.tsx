@@ -21,6 +21,10 @@ export interface FichaMacro {
   perfilEgreso: string
   propositos: string
   planEstudios: string
+  planEstudiosArchivo: string | null
+  planEstudiosNombre: string | null
+  planEstudiosTamano: string | null
+  planEstudiosUrl: string | null
   modalidad: string
   nivel: string
   duracionSemestres: number | null
@@ -161,6 +165,8 @@ export function FormularioMacro({
   facultades: Opcion[]
   fichas: FichaMacro[]
 }) {
+  const [quitarPdf, setQuitarPdf] = useState(false)
+  const [nombrePdf, setNombrePdf] = useState<string | null>(null)
   const [estado, accion] = useActionState<EstadoCurriculo, FormData>(guardarMacro, {})
   const [programaId, setProgramaId] = useState(programas[0]?.id ?? 0)
 
@@ -263,12 +269,102 @@ export function FormularioMacro({
           <label className="block text-sm font-medium text-slate-700">
             Plan general de estudios
           </label>
+          <p className="mt-0.5 text-xs text-texto-secundario">
+            Resumen en texto. El agente de IA puede leerlo como contexto; un
+            PDF no.
+          </p>
           <textarea
             name="plan_estudios"
             rows={3}
             className={CAMPO}
             defaultValue={ficha?.planEstudios ?? ''}
           />
+        </div>
+
+        {/* ---------- El documento oficial ---------- */}
+        <div className="rounded-lg border border-superficie-borde p-4">
+          <span className="block text-sm font-medium text-slate-700">
+            Documento del plan de estudios (PDF)
+          </span>
+          <p className="mt-0.5 text-xs text-texto-secundario">
+            El documento completo, para consultar. Máximo 20 MB. No sustituye
+            al resumen de arriba: conviene tener los dos.
+          </p>
+
+          {ficha?.planEstudiosArchivo && !quitarPdf && (
+            <div className="mt-3 flex flex-wrap items-center gap-3 rounded-md
+                            bg-institucional-suave px-3 py-2">
+              {ficha.planEstudiosUrl ? (
+                <a
+                  href={ficha.planEstudiosUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-institucional underline underline-offset-2"
+                >
+                  {ficha.planEstudiosNombre}
+                </a>
+              ) : (
+                <span className="text-sm text-slate-800">
+                  {ficha.planEstudiosNombre}
+                </span>
+              )}
+              {ficha.planEstudiosTamano && (
+                <span className="text-xs text-texto-secundario">
+                  {ficha.planEstudiosTamano}
+                </span>
+              )}
+              <button
+                type="button"
+                onClick={() => setQuitarPdf(true)}
+                className="text-xs text-institucional underline underline-offset-2"
+              >
+                Quitar
+              </button>
+            </div>
+          )}
+
+          {quitarPdf && (
+            <div className="mt-3 flex flex-wrap items-center gap-3 rounded-md
+                            bg-amber-50 px-3 py-2">
+              <input type="hidden" name="quitar_pdf" value="1" />
+              <span className="text-xs text-amber-900">
+                Se retirará al guardar.
+              </span>
+              <button
+                type="button"
+                onClick={() => setQuitarPdf(false)}
+                className="text-xs text-amber-900 underline underline-offset-2"
+              >
+                Deshacer
+              </button>
+            </div>
+          )}
+
+          <input
+            type="file"
+            name="plan_estudios_pdf"
+            accept="application/pdf,.pdf"
+            onChange={(e) => {
+              const f = e.target.files?.[0]
+              setNombrePdf(f ? f.name : null)
+              // Elegir un archivo nuevo deja sin sentido el «quitar»: la
+              // intención evidente es reemplazar, no borrar.
+              if (f) setQuitarPdf(false)
+            }}
+            className="mt-3 block w-full cursor-pointer rounded-lg border
+                       border-superficie-borde px-3 py-2 text-sm
+                       file:mr-3 file:cursor-pointer file:rounded-md
+                       file:border-0 file:bg-institucional file:px-3
+                       file:py-1.5 file:text-sm file:font-medium
+                       file:text-white hover:file:bg-institucional-claro"
+          />
+
+          {nombrePdf && (
+            <p className="mt-2 text-xs text-texto-secundario">
+              Se subirá <strong>{nombrePdf}</strong>
+              {ficha?.planEstudiosArchivo && ', reemplazando el actual'}.
+            </p>
+          )}
         </div>
 
         <label className="flex items-center gap-2 text-sm text-slate-700">
