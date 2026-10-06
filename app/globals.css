@@ -7,3 +7,58 @@
     @apply bg-superficie-pagina text-slate-900 font-sans antialiased;
   }
 }
+
+/* ---------- Ilustración de bienvenida (componentes/bienvenida-animada.tsx) ---------- */
+@layer components {
+  .bienvenida-escenario {
+    position: relative;
+    aspect-ratio: 1024 / 1536;
+    width: 100%;
+    overflow: hidden;
+    border-radius: 14px;
+    box-shadow: 0 10px 30px rgb(0 0 0 / 0.25);
+  }
+  .bienvenida-capa {
+    position: absolute;
+    inset: 0;
+    background-size: 100% 100%;
+    background-repeat: no-repeat;
+  }
+  .bienvenida-guia {
+    animation: bienvenida-balanceo 4s ease-in-out infinite;
+    transform-origin: 30% 95%;
+  }
+  .bienvenida-mano {
+    animation: bienvenida-mano 2.4s ease-in-out infinite;
+    transform-origin: 45% 36%;
+  }
+  .bienvenida-tapa {
+    position: absolute;
+    background: #e9f2fc;
+    border-radius: 12px;
+    animation: bienvenida-revelar 0.7s ease forwards;
+  }
+
+  /* Quien pide menos movimiento ve la ilustración completa y quieta. */
+  @media (prefers-reduced-motion: reduce) {
+    .bienvenida-guia,
+    .bienvenida-mano {
+      animation: none;
+    }
+    .bienvenida-tapa {
+      display: none;
+    }
+  }
+}
+
+@keyframes bienvenida-balanceo {
+  0%, 100% { transform: translateY(0) rotate(0); }
+  50% { transform: translateY(-0.3%) rotate(0.5deg); }
+}
+@keyframes bienvenida-mano {
+  0%, 100% { transform: rotate(0); }
+  50% { transform: rotate(-4deg) translateY(-0.4%); }
+}
+@keyframes bienvenida-revelar {
+  to { opacity: 0; transform: translateY(-8px) scale(1.04); }
+}

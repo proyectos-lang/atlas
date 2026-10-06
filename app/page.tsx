@@ -6,6 +6,7 @@ import {
 } from 'lucide-react'
 import { perfilActual } from '@/lib/auth/sesion'
 import { BotonEnlace } from '@/componentes/ui/boton'
+import { BienvenidaAnimada } from '@/componentes/bienvenida-animada'
 import { COMPETENCIAS_EXPLICADAS } from '@/lib/kpi/metodologia'
 
 export const metadata = {
@@ -68,39 +69,46 @@ export default async function Portada() {
           aria-hidden
         />
 
-        <div className="relative mx-auto max-w-6xl px-5 py-20 lg:py-28">
-          <p className="inline-flex items-center gap-2 rounded-full border border-white/20
-                        bg-white/10 px-3 py-1 text-xs font-medium text-white/85">
-            <Sparkles size={13} aria-hidden />
-            Analítica de competencias transversales
-          </p>
+        <div
+          className="relative mx-auto grid max-w-6xl items-center gap-10 px-5 py-16
+                     lg:grid-cols-[1.2fr_1fr] lg:py-20"
+        >
+          <div>
+            <p className="inline-flex items-center gap-2 rounded-full border border-white/20
+                          bg-white/10 px-3 py-1 text-xs font-medium text-white/85">
+              <Sparkles size={13} aria-hidden />
+              Analítica de competencias transversales
+            </p>
 
-          <h1 className="mt-5 max-w-3xl text-4xl font-semibold leading-[1.1] tracking-tight
-                         text-white lg:text-6xl">
-            Lo que un estudiante hace,
-            <br />
-            traducido a lo que sabe hacer.
-          </h1>
+            <h1 className="mt-5 max-w-3xl text-4xl font-semibold leading-[1.1] tracking-tight
+                           text-white lg:text-6xl">
+              Lo que un estudiante hace,
+              <br />
+              traducido a lo que sabe hacer.
+            </h1>
 
-          <p className="mt-5 max-w-2xl text-base leading-relaxed text-white/75 lg:text-lg">
-            ATLAS mide cinco competencias transversales a partir de la actividad real
-            en la plataforma y de la evaluación del docente. No se queda en el
-            porcentaje: señala dónde está la carencia y propone qué hacer.
-          </p>
+            <p className="mt-5 max-w-2xl text-base leading-relaxed text-white/75 lg:text-lg">
+              ATLAS mide cinco competencias transversales a partir de la actividad real
+              en la plataforma y de la evaluación del docente. No se queda en el
+              porcentaje: señala dónde está la carencia y propone qué hacer.
+            </p>
 
-          <div className="mt-8 flex flex-wrap items-center gap-3">
-            <BotonEnlace href="/entrar" tamano="lg" variante="secundario">
-              Entrar a la plataforma
-              <ArrowRight size={17} aria-hidden />
-            </BotonEnlace>
-            <Link
-              href="#competencias"
-              className="rounded-lg px-4 py-2.5 text-[15px] font-medium text-white/80
-                         transition hover:bg-white/10 hover:text-white"
-            >
-              Ver qué mide
-            </Link>
+            <div className="mt-8 flex flex-wrap items-center gap-3">
+              <BotonEnlace href="/entrar" tamano="lg" variante="secundario">
+                Entrar a la plataforma
+                <ArrowRight size={17} aria-hidden />
+              </BotonEnlace>
+              <Link
+                href="#competencias"
+                className="rounded-lg px-4 py-2.5 text-[15px] font-medium text-white/80
+                           transition hover:bg-white/10 hover:text-white"
+              >
+                Ver qué mide
+              </Link>
+            </div>
           </div>
+
+          <BienvenidaAnimada className="mx-auto w-full max-w-[340px] lg:max-w-[400px]" />
         </div>
       </section>
 
