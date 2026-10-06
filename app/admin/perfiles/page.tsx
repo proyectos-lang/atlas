@@ -76,7 +76,9 @@ export default async function PaginaPerfiles() {
             estudiantes={listaEst.map((e) => ({ id: e.id, etiqueta: e.codigo }))}
             programas={listaProg.map((p) => ({ id: p.id, etiqueta: p.nombre }))}
             gruposCurso={listaGrupos.map((g) => ({
-              id: g.id, etiqueta: `${g.nombre} (${g.codigo})`,
+              id: g.id,
+              etiqueta: `${nombreCurso.get(g.cursoId) ?? 'Curso'} — ${g.nombre} (${g.codigo})`,
+              cursoId: g.cursoId,
             }))}
             grupos={grupos}
             modulosPorRol={modulosPorRol}

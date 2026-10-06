@@ -4,7 +4,7 @@ import { createServerClient } from '@supabase/ssr'
 import { redirect } from 'next/navigation'
 import { clienteServidor } from '@/lib/supabase/servidor'
 import {
-  alcanceDe, inicioDe, perfilPuedeVer,
+  alcanceDe, inicioDe, perfilPuedeVer, type GrupoAsignado,
   type Alcance, type Perfil, type Rol,
 } from './alcance'
 
@@ -49,22 +49,69 @@ export async function perfilActual(): Promise<Perfil | null> {
 
   if (error || !data || !data.activo) return null
 
+  const id = Number(data.id)
+  const cursoId = data.curso_id === null ? null : Number(data.curso_id)
+  const grupoId = data.grupo_id == null ? null : Number(data.grupo_id)
+
   return {
-    id: Number(data.id),
+    id,
     authUserId: String(data.auth_user_id),
     nombre: String(data.nombre),
     email: String(data.email),
     rol: data.rol as Rol,
     universidadId: data.universidad_id === null ? null : Number(data.universidad_id),
     programaId: data.programa_id == null ? null : Number(data.programa_id),
-    cursoId: data.curso_id === null ? null : Number(data.curso_id),
-    grupoId: data.grupo_id == null ? null : Number(data.grupo_id),
+    cursoId,
+    grupoId,
     usuarioId: data.usuario_id === null ? null : Number(data.usuario_id),
     activo: Boolean(data.activo),
     // Ausente (columna sin migrar) o NULL significan lo mismo: sin
     // personalizar. El array vacío, en cambio, sí es una decisión.
     modulos: Array.isArray(data.modulos) ? data.modulos.map(String) : null,
+    gruposAsignados:
+      data.rol === 'docente' ? await gruposDelDocente(id, grupoId === null ? cursoId : null) : [],
   }
+}
+
+/**
+ * Grupos de los que el docente es responsable, con su curso, universidad
+ * y programa.
+ *
+ * Si además tiene un curso completo fijado en su perfil, se añaden los
+ * grupos de ese curso: cuando tiene grupos en OTROS cursos, el alcance
+ * pasa a listar grupos explícitamente y sin esto perdería los del curso
+ * completo.
+ */
+async function gruposDelDocente(
+  perfilId: number,
+  cursoCompleto: number | null
+): Promise<GrupoAsignado[]> {
+  const db = clienteServidor()
+  const columnas = 'id, curso_id, cursos(universidad_id, programa_id)'
+
+  const filtro = cursoCompleto !== null
+    ? `docente_id.eq.${perfilId},curso_id.eq.${cursoCompleto}`
+    : `docente_id.eq.${perfilId}`
+
+  const { data, error } = await db
+    .from('grupos')
+    .select(columnas)
+    .or(filtro)
+    .eq('activo', true)
+
+  // Sin la tabla de grupos (migración 08 sin aplicar) no hay asignaciones.
+  if (error) return []
+
+  return (data ?? []).map((g) => {
+    const curso = (Array.isArray(g.cursos) ? g.cursos[0] : g.cursos) as
+      { universidad_id: number | null; programa_id: number | null } | null
+    return {
+      grupoId: Number(g.id),
+      cursoId: Number(g.curso_id),
+      universidadId: curso?.universidad_id == null ? null : Number(curso.universidad_id),
+      programaId: curso?.programa_id == null ? null : Number(curso.programa_id),
+    }
+  })
 }
 
 /**

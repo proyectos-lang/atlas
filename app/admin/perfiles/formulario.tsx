@@ -5,7 +5,7 @@ import { SelectorModulos, type GrupoModulos } from '@/componentes/selector-modul
 import { useActionState, useState } from 'react'
 import { crearPerfil, type EstadoPerfil } from './acciones'
 
-interface Opcion { id: number; etiqueta: string }
+interface Opcion { id: number; etiqueta: string; cursoId?: number }
 
 export function FormularioPerfil({
   universidades,
@@ -26,6 +26,7 @@ export function FormularioPerfil({
 }) {
   const [estado, accion] = useActionState<EstadoPerfil, FormData>(crearPerfil, {})
   const [rol, setRol] = useState('docente')
+  const [cursoSel, setCursoSel] = useState('')
 
   // El alcance exigido cambia con el rol; se muestra solo lo pertinente.
   const pideUniversidad = rol === 'coordinador' || rol === 'asesor'
@@ -110,16 +111,33 @@ export function FormularioPerfil({
       )}
 
       {pideCurso && (
+        <div className="rounded-md bg-institucional-suave/50 p-3 text-xs text-slate-700">
+          <strong>No hace falta elegir curso ni grupo ahora.</strong> Lo habitual
+          es crear al docente y luego asignarlo a sus grupos (en Jerarquía o en
+          el Asistente de creación, donde también puedes crearlo directamente).
+          Cada grupo asignado le da acceso a sus estudiantes.
+        </div>
+      )}
+
+      {pideCurso && (
         <div>
           <label className="block text-sm font-medium text-slate-700">
-            Curso <span className="text-red-600">*</span>
+            Curso completo <span className="font-normal text-texto-secundario">(opcional)</span>
           </label>
-          <select name="curso_id" required className={campo}>
-            <option value="">Selecciona…</option>
+          <select
+            name="curso_id"
+            value={cursoSel}
+            onChange={(e) => setCursoSel(e.target.value)}
+            className={campo}
+          >
+            <option value="">Ninguno: lo asignaré a sus grupos</option>
             {cursos.map((c) => (
               <option key={c.id} value={c.id}>{c.etiqueta}</option>
             ))}
           </select>
+          <p className="mt-1 text-xs text-texto-secundario">
+            Sólo si debe ver <strong>todos los grupos</strong> del curso.
+          </p>
         </div>
       )}
 
@@ -128,15 +146,17 @@ export function FormularioPerfil({
           <label className="block text-sm font-medium text-slate-700">
             Grupo <span className="font-normal text-texto-secundario">(opcional)</span>
           </label>
-          <select name="grupo_id" className={campo} defaultValue="">
-            <option value="">Todo el curso</option>
-            {gruposCurso.map((g) => (
-              <option key={g.id} value={g.id}>{g.etiqueta}</option>
-            ))}
+          <select name="grupo_id" className={campo} defaultValue="" key={cursoSel}>
+            <option value="">{cursoSel ? 'Todo el curso' : 'Ninguno por ahora'}</option>
+            {gruposCurso
+              .filter((g) => !cursoSel || g.cursoId === Number(cursoSel))
+              .map((g) => (
+                <option key={g.id} value={g.id}>{g.etiqueta}</option>
+              ))}
           </select>
           <p className="mt-1 text-xs text-texto-secundario">
-            Con un grupo asignado verá <strong>sólo ese grupo</strong>. Es lo que
-            permite que dos docentes compartan curso sin verse.
+            Si eliges un grupo, queda como su docente responsable y verá{' '}
+            <strong>sólo ese grupo</strong>.
           </p>
         </div>
       )}

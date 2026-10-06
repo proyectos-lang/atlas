@@ -2,6 +2,7 @@
 
 import { useActionState, useState } from 'react'
 import { BotonEnvio } from '@/componentes/ui/boton-envio'
+import { SelectorDocente } from '@/componentes/selector-docente'
 import { crearPrograma, crearGrupo, type EstadoJerarquia } from './acciones'
 
 export interface Opcion {
@@ -148,24 +149,7 @@ export function FormularioGrupo({
         </div>
       </div>
 
-      <div>
-        <label className="block text-sm font-medium text-slate-700">
-          Docente <span className="font-normal text-texto-secundario">(opcional)</span>
-        </label>
-        <select name="docente_id" className={CAMPO} defaultValue="">
-          <option value="">Sin asignar</option>
-          {docentes.map((d) => (
-            <option key={d.id} value={d.id}>
-              {d.etiqueta}{d.pie ? ` — ${d.pie}` : ''}
-            </option>
-          ))}
-        </select>
-        <p className="mt-1 text-xs text-texto-secundario">
-          Asignar el docente aquí lo deja registrado como responsable del grupo.
-          Para que además <strong>vea sólo ese grupo</strong>, hay que darle el
-          grupo como alcance en Perfiles de acceso.
-        </p>
-      </div>
+      <SelectorDocente docentes={docentes} campo={CAMPO} />
 
       <div>
         <label className="block text-sm font-medium text-slate-700">

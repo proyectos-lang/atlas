@@ -7,6 +7,7 @@ import {
 } from 'lucide-react'
 import { BotonEnvio } from '@/componentes/ui/boton-envio'
 import { BotonEnlace } from '@/componentes/ui/boton'
+import { SelectorDocente } from '@/componentes/selector-docente'
 import { crearUniversidad, crearCurso, type EstadoCreacion } from './acciones'
 import { crearPrograma, crearGrupo } from '@/app/admin/jerarquia/acciones'
 import { crearResultado } from '@/app/admin/curriculo/acciones'
@@ -29,7 +30,7 @@ export interface OpcionCurso extends Opcion { programaId: number | null }
 
 type Tipo = 'universidad' | 'programa' | 'curso' | 'grupo' | 'resultado'
 
-interface Creado { tipo: Tipo; id: number; nombre: string }
+interface Creado { tipo: Tipo; id: number; nombre: string; mensaje?: string }
 
 const TIPOS: { tipo: Tipo; titulo: string; pie: string; icono: typeof Building2 }[] = [
   { tipo: 'universidad', titulo: 'Universidad', pie: 'La institución que ofrece programas', icono: Building2 },
@@ -404,7 +405,7 @@ function PasoDatos({
   // Al confirmarse la creación, el asistente avanza solo.
   useEffect(() => {
     if (estado.ok && estado.id !== undefined) {
-      onCreado({ tipo, id: estado.id, nombre: estado.nombre ?? estado.ok })
+      onCreado({ tipo, id: estado.id, nombre: estado.nombre ?? estado.ok, mensaje: estado.ok })
     }
     // onCreado cambia de identidad en cada render del padre; disparar por
     // él repetiría la llamada. Sólo importa el resultado de la acción.
@@ -541,23 +542,15 @@ function PasoDatos({
       )}
 
       {tipo === 'grupo' && (
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div>
-            <label className="block text-sm font-medium text-slate-700">
-              Docente <span className="font-normal text-texto-secundario">(opcional)</span>
-            </label>
-            <select name="docente_id" className={CAMPO} defaultValue="">
-              <option value="">Sin asignar</option>
-              {docentes.map((d) => <option key={d.id} value={d.id}>{d.etiqueta}</option>)}
-            </select>
-          </div>
+        <>
+          <SelectorDocente docentes={docentes} campo={CAMPO} />
           <div>
             <label className="block text-sm font-medium text-slate-700">
               Periodo <span className="font-normal text-texto-secundario">(opcional)</span>
             </label>
             <input name="periodo" placeholder="2026-1" className={CAMPO} />
           </div>
-        </div>
+        </>
       )}
 
       {estado.error && (
@@ -610,7 +603,7 @@ function PasoListo({
         </span>
         <div>
           <p className="text-sm font-semibold text-green-900">Creado correctamente</p>
-          <p className="mt-0.5 text-sm text-green-900">{creado.nombre}</p>
+          <p className="mt-0.5 text-sm text-green-900">{creado.mensaje ?? creado.nombre}</p>
         </div>
       </div>
 
@@ -626,11 +619,6 @@ function PasoListo({
             >
               {sig.texto}
             </button>
-          )}
-          {creado.tipo === 'grupo' && (
-            <BotonEnlace href="/admin/perfiles" variante="primario">
-              Dar acceso al docente del grupo
-            </BotonEnlace>
           )}
           {creado.tipo === 'resultado' && (
             <BotonEnlace href="/admin/curriculo" variante="primario">

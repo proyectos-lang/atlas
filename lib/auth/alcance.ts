@@ -27,7 +27,23 @@ export interface Perfil {
    * usa los de su rol. Array vacío = ningún módulo (no es lo mismo).
    */
   modulos: string[] | null
+  /**
+   * Grupos de los que este perfil es responsable (grupos.docente_id), con
+   * su curso. Para un docente es la fuente principal de acceso: asignarle
+   * un grupo le da ese grupo. Ausente = ninguno.
+   */
+  gruposAsignados?: GrupoAsignado[]
 }
+
+export interface GrupoAsignado {
+  grupoId: number
+  cursoId: number
+  universidadId: number | null
+  programaId: number | null
+}
+
+const unicos = (xs: (number | null | undefined)[]): number[] =>
+  [...new Set(xs.filter((x): x is number => x != null))]
 
 /**
  * Conjuntos de ids visibles. `null` significa "sin restricción en esta
@@ -133,7 +149,7 @@ export function inicioDe(perfil: Pick<Perfil, 'rol' | 'modulos'>): string | null
  * · admin        todas las universidades, cursos y estudiantes
  * · coordinador  solo su universidad
  * · asesor       solo su universidad
- * · docente      solo su curso
+ * · docente      sus grupos asignados (y el curso fijado en su perfil)
  * · estudiante   solo sus propios datos
  *
  * Si a un perfil restringido le falta su id de ámbito, el alcance queda
@@ -181,17 +197,39 @@ export function alcanceDe(perfil: Perfil): Alcance {
             usuarioIds: null,
           }
 
-    case 'docente':
-      // Un docente con grupo asignado ve solo ese grupo, no el curso entero:
-      // es lo que permite que dos docentes compartan curso sin verse.
+    case 'docente': {
+      // El docente ve los grupos de los que es responsable. Además, por
+      // compatibilidad, lo fijado en su perfil: un curso entero (curso sin
+      // grupo) o un grupo concreto.
+      //
+      // Un docente con grupo asignado ve solo ese grupo, no el curso
+      // entero: es lo que permite que dos docentes compartan curso sin
+      // verse. Por eso los grupos se listan explícitamente salvo cuando
+      // todo su acceso es un único curso completo; ahí se deja el grupo
+      // sin filtrar para no perder estudiantes aún sin grupo.
+      const asignados = perfil.gruposAsignados ?? []
+      const cursoCompleto =
+        perfil.cursoId !== null && perfil.grupoId === null ? perfil.cursoId : null
+
+      const cursoIds = unicos([perfil.cursoId, ...asignados.map((g) => g.cursoId)])
+      const todoEnElCursoCompleto =
+        cursoCompleto !== null && asignados.every((g) => g.cursoId === cursoCompleto)
+
+      const universidades = unicos([perfil.universidadId, ...asignados.map((g) => g.universidadId)])
+      const programas = unicos([perfil.programaId, ...asignados.map((g) => g.programaId)])
+
       return {
         ...base,
-        universidadIds: perfil.universidadId !== null ? [perfil.universidadId] : null,
-        programaIds: perfil.programaId !== null ? [perfil.programaId] : null,
-        cursoIds: perfil.cursoId !== null ? [perfil.cursoId] : [],
-        grupoIds: perfil.grupoId !== null ? [perfil.grupoId] : null,
+        universidadIds: universidades.length > 0 ? universidades : null,
+        programaIds: programas.length > 0 ? programas : null,
+        // Sin curso ni grupos asignados no ve nada (lista vacía, no abierta).
+        cursoIds,
+        grupoIds: todoEnElCursoCompleto
+          ? null
+          : unicos([perfil.grupoId, ...asignados.map((g) => g.grupoId)]),
         usuarioIds: null,
       }
+    }
 
     case 'estudiante':
       return {

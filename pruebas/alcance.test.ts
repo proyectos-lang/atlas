@@ -119,3 +119,50 @@ describe('rutas por rol', () => {
     expect(puedeVer('estudiante', '/estudiante/detalle')).toBe(true)
   })
 })
+
+describe('el docente obtiene su acceso de los grupos que se le asignan', () => {
+  // Antes el acceso salía sólo del curso fijado en el perfil: un docente
+  // creado sin curso no veía nada aunque tuviera grupos, y uno con grupos
+  // en dos cursos no se podía representar.
+  const g = (grupoId: number, cursoId: number, programaId = 5, universidadId = 1) =>
+    ({ grupoId, cursoId, programaId, universidadId })
+
+  const docente = (extra: Partial<Perfil>): Perfil => ({ ...perfil('docente'), ...extra })
+
+  it('sin curso ni grupos asignados no ve nada', () => {
+    expect(alcanceVacio(alcanceDe(docente({ gruposAsignados: [] })))).toBe(true)
+  })
+
+  it('con un grupo asignado ve sólo ese grupo y su curso', () => {
+    const a = alcanceDe(docente({ gruposAsignados: [g(7, 3)] }))
+    expect(a.cursoIds).toEqual([3])
+    expect(a.grupoIds).toEqual([7])
+    expect(alcanceVacio(a)).toBe(false)
+  })
+
+  it('con grupos en dos cursos ve ambos, y sólo esos grupos', () => {
+    const a = alcanceDe(docente({ gruposAsignados: [g(7, 3), g(9, 4, 6)] }))
+    expect(a.cursoIds).toEqual([3, 4])
+    expect(a.grupoIds).toEqual([7, 9])
+    expect(a.programaIds).toEqual([5, 6])
+  })
+
+  it('un curso completo en el perfil sigue sin filtrar por grupo', () => {
+    const a = alcanceDe(docente({ cursoId: 3, gruposAsignados: [g(7, 3), g(8, 3)] }))
+    expect(a.cursoIds).toEqual([3])
+    expect(a.grupoIds).toBeNull()
+  })
+
+  it('curso completo más un grupo en otro curso: lista grupos, sin abrir el otro curso entero', () => {
+    // La sesión añade los grupos del curso completo (7, 8) a los asignados.
+    const a = alcanceDe(docente({ cursoId: 3, gruposAsignados: [g(7, 3), g(8, 3), g(20, 4)] }))
+    expect(a.cursoIds).toEqual([3, 4])
+    expect(a.grupoIds).toEqual([7, 8, 20])
+  })
+
+  it('el grupo fijado en el perfil (configuración antigua) se respeta', () => {
+    const a = alcanceDe(docente({ cursoId: 3, grupoId: 7 }))
+    expect(a.cursoIds).toEqual([3])
+    expect(a.grupoIds).toEqual([7])
+  })
+})

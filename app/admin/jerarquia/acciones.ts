@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { clienteServidor } from '@/lib/supabase/servidor'
 import { exigirRol } from '@/lib/auth/sesion'
+import { crearCuenta, revertirCuenta, validarCredenciales } from '@/lib/auth/cuentas'
 import { faltaMigracion } from '@/lib/supabase/migracion-pendiente'
 
 export interface EstadoJerarquia {
@@ -85,7 +86,11 @@ export async function crearPrograma(
  * Crea un grupo (sección) dentro de un curso, con su docente opcional.
  *
  * El grupo es el nivel donde un docente concreto se hace responsable de un
- * subconjunto de estudiantes del curso.
+ * subconjunto de estudiantes del curso, y asignarlo aquí le da acceso.
+ *
+ * El docente puede crearse en el mismo envío (`docente_id = 'nuevo'`).
+ * Antes había que crearlo primero en Perfiles, que a su vez pedía un curso
+ * o grupo: el usuario quedaba atrapado entre dos formularios.
  */
 export async function crearGrupo(
   _previo: EstadoJerarquia,
@@ -95,21 +100,32 @@ export async function crearGrupo(
 
   const cursoId = entero(formulario.get('curso_id'))
   const nombre = texto(formulario.get('nombre'))
-  const docenteId = entero(formulario.get('docente_id'))
+  const docenteNuevo = texto(formulario.get('docente_id')) === 'nuevo'
+  let docenteId = docenteNuevo ? null : entero(formulario.get('docente_id'))
   const periodo = texto(formulario.get('periodo'))
   let codigo = texto(formulario.get('codigo'))
 
   if (cursoId === null) return { error: 'Selecciona un curso.' }
   if (nombre.length < 2) return { error: 'El nombre del grupo es obligatorio.' }
 
+  const nuevo = {
+    nombre: texto(formulario.get('docente_nombre')),
+    email: texto(formulario.get('docente_email')),
+    password: String(formulario.get('docente_password') ?? ''),
+  }
+  if (docenteNuevo) {
+    const invalido = validarCredenciales(nuevo.nombre, nuevo.email, nuevo.password)
+    if (invalido) return { error: `Docente nuevo: ${invalido}` }
+  }
+
   const db = clienteServidor()
+
+  const { data: curso } = await db
+    .from('cursos').select('codigo').eq('id', cursoId).maybeSingle()
+  if (!curso) return { error: 'El curso indicado no existe.' }
 
   // Sin código explícito se deriva del curso: C01-G2, C01-G3…
   if (!codigo) {
-    const { data: curso } = await db
-      .from('cursos').select('codigo').eq('id', cursoId).maybeSingle()
-    if (!curso) return { error: 'El curso indicado no existe.' }
-
     const { count } = await db
       .from('grupos')
       .select('id', { count: 'exact', head: true })
@@ -118,8 +134,14 @@ export async function crearGrupo(
     codigo = `${String(curso.codigo)}-G${(count ?? 0) + 1}`
   }
 
-  if (!codigo) {
-    return { error: 'Escribe un código.' }
+  // La cuenta se crea antes que el grupo para poder enlazarla; si el grupo
+  // falla después, se revierte y no queda un docente suelto.
+  let cuenta: { perfilId: number; authUserId: string } | null = null
+  if (docenteNuevo) {
+    const r = await crearCuenta({ ...nuevo, rol: 'docente' })
+    if ('error' in r) return { error: `Docente nuevo: ${r.error}` }
+    cuenta = r
+    docenteId = r.perfilId
   }
 
   const { data, error } = await db.from('grupos').insert({
@@ -131,6 +153,7 @@ export async function crearGrupo(
   }).select('id').single()
 
   if (error) {
+    if (cuenta) await revertirCuenta(cuenta.perfilId, cuenta.authUserId)
     if (faltaMigracion(error.code)) return { error: AVISO_MIGRACION }
     if (error.code === '23505') {
       return { error: `Ya existe un grupo con el código ${codigo} o ese nombre en el curso.` }
@@ -140,7 +163,15 @@ export async function crearGrupo(
 
   revalidatePath('/admin/jerarquia')
   revalidatePath('/admin/crear')
-  return { ok: `Grupo ${nombre} creado como ${codigo}.`, id: Number(data.id), nombre }
+  revalidatePath('/admin/perfiles')
+  return {
+    ok: cuenta
+      ? `Grupo ${nombre} creado como ${codigo}, con ${nuevo.nombre} como docente. ` +
+        `Ya puede entrar con ${nuevo.email}.`
+      : `Grupo ${nombre} creado como ${codigo}.`,
+    id: Number(data.id),
+    nombre,
+  }
 }
 
 /**
@@ -149,9 +180,9 @@ export async function crearGrupo(
  * El docente es un perfil, no una fila de `usuarios`: en este modelo los
  * docentes existen como cuentas de acceso, no como registros de datos.
  *
- * Asignar el docente NO le da acceso por sí solo: para que vea únicamente
- * ese grupo, su perfil debe tener `grupo_id` en la pantalla de perfiles.
- * Son dos cosas distintas y la interfaz lo advierte.
+ * Asignarlo le DA acceso a ese grupo desde su siguiente petición, y
+ * cambiarlo por otro se lo retira: el alcance del docente se deriva de
+ * `grupos.docente_id` (lib/auth/sesion.ts).
  */
 export async function asignarDocente(formulario: FormData) {
   await exigirRol(['admin'])

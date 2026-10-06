@@ -1,10 +1,10 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { createClient } from '@supabase/supabase-js'
 import { clienteServidor } from '@/lib/supabase/servidor'
 import type { Rol } from '@/lib/auth/alcance'
 import { exigirRol } from '@/lib/auth/sesion'
+import { crearCuenta, validarCredenciales } from '@/lib/auth/cuentas'
 
 export interface EstadoPerfil {
   error?: string
@@ -43,6 +43,11 @@ function nuloOEntero(v: FormDataEntryValue | null): number | null {
  * Crea un usuario en Supabase Auth y su perfil en atlas.perfiles.
  * Sólo admin. El alcance se asigna aquí; sin él, un rol restringido
  * no verá ningún dato (alcance vacío, no abierto).
+ *
+ * Un docente NO necesita curso ni grupo al crearse. Antes los exigía, y
+ * eso cerraba un círculo: el grupo pedía un docente que aún no existía y
+ * el docente pedía un curso o grupo que aún no existía. Ahora el docente
+ * obtiene su acceso de los grupos que se le asignan (grupos.docente_id).
  */
 export async function crearPerfil(
   _previo: EstadoPerfil,
@@ -55,17 +60,13 @@ export async function crearPerfil(
   const password = String(formulario.get('password') ?? '')
   const rol = String(formulario.get('rol') ?? '') as Rol
 
-  if (!nombre || !email || !password) {
-    return { error: 'Nombre, correo y contraseña son obligatorios.' }
-  }
+  const invalido = validarCredenciales(nombre, email, password)
+  if (invalido) return { error: invalido }
   if (!ROLES.includes(rol)) return { error: 'Rol no válido.' }
-  if (password.length < 8) {
-    return { error: 'La contraseña debe tener al menos 8 caracteres.' }
-  }
 
   const universidadId = nuloOEntero(formulario.get('universidad_id'))
   const programaId = nuloOEntero(formulario.get('programa_id'))
-  const cursoId = nuloOEntero(formulario.get('curso_id'))
+  let cursoId = nuloOEntero(formulario.get('curso_id'))
   const grupoId = nuloOEntero(formulario.get('grupo_id'))
   const usuarioId = nuloOEntero(formulario.get('usuario_id'))
 
@@ -73,51 +74,49 @@ export async function crearPerfil(
   if ((rol === 'coordinador' || rol === 'asesor') && universidadId === null) {
     return { error: 'Un coordinador o asesor necesita una universidad asignada.' }
   }
-  if (rol === 'docente' && cursoId === null) {
-    return { error: 'Un docente necesita un curso asignado.' }
-  }
   if (rol === 'estudiante' && usuarioId === null) {
     return { error: 'Un estudiante necesita un registro de estudiante asignado.' }
   }
 
-  const admin = createClient(
-    process.env.SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { auth: { persistSession: false, autoRefreshToken: false } }
-  )
-
-  const { data: creado, error: eAuth } = await admin.auth.admin.createUser({
-    email,
-    password,
-    email_confirm: true,
-  })
-  if (eAuth || !creado.user) {
-    return { error: `No se pudo crear la cuenta: ${eAuth?.message ?? 'desconocido'}` }
+  // Un grupo determina su curso: si viene grupo, el curso se deriva de él
+  // y no puede contradecirlo.
+  if (rol === 'docente' && grupoId !== null) {
+    const db = clienteServidor()
+    const { data: grupo } = await db
+      .from('grupos').select('curso_id').eq('id', grupoId).maybeSingle()
+    if (!grupo) return { error: 'El grupo indicado no existe.' }
+    if (cursoId !== null && cursoId !== Number(grupo.curso_id)) {
+      return { error: 'Ese grupo no pertenece al curso elegido.' }
+    }
+    cursoId = Number(grupo.curso_id)
   }
 
-  const db = clienteServidor()
-  const { error: ePerfil } = await db.from('perfiles').insert({
-    auth_user_id: creado.user.id,
-    nombre,
-    email,
-    rol,
-    universidad_id: universidadId,
-    programa_id: programaId,
-    curso_id: cursoId,
-    grupo_id: grupoId,
-    usuario_id: usuarioId,
-    activo: true,
+  // Para un docente el grupo se registra SÓLO como responsable del grupo
+  // (grupos.docente_id), no en su perfil: así hay una única fuente de
+  // verdad y reasignar el grupo a otro docente le retira el acceso a este.
+  const porGrupo = rol === 'docente' && grupoId !== null
+  const r = await crearCuenta({
+    nombre, email, password, rol,
+    universidadId, programaId,
+    cursoId: porGrupo ? null : cursoId,
+    grupoId: porGrupo ? null : grupoId,
+    usuarioId,
     modulos: modulosDelFormulario(formulario),
   })
+  if ('error' in r) return { error: r.error }
 
-  if (ePerfil) {
-    // Sin perfil la cuenta es inútil: se revierte para no dejar huérfanos.
-    await admin.auth.admin.deleteUser(creado.user.id)
-    return { error: `No se pudo crear el perfil: ${ePerfil.message}` }
+  if (porGrupo) {
+    const db = clienteServidor()
+    await db.from('grupos').update({ docente_id: r.perfilId }).eq('id', grupoId)
+    revalidatePath('/admin/jerarquia')
   }
 
   revalidatePath('/admin/perfiles')
-  return { ok: `Perfil de ${nombre} creado como ${rol}.` }
+  return {
+    ok: rol === 'docente' && cursoId === null && !porGrupo
+      ? `Docente ${nombre} creado. Asígnalo a sus grupos (Jerarquía o Asistente de creación) para que vea sus estudiantes.`
+      : `Perfil de ${nombre} creado como ${rol}.`,
+  }
 }
 
 /**

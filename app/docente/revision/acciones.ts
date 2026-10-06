@@ -55,10 +55,16 @@ async function cargar(id: number) {
   return data
 }
 
-/** Sólo el docente de ese curso (o un admin) puede revisarla. */
+/**
+ * Sólo quien tiene ese curso en su alcance (o un admin) puede revisarla.
+ *
+ * Se mira el alcance y no `perfil.cursoId`: un docente puede tener grupos
+ * en varios cursos, y uno sin curso fijado en el perfil no debe poder
+ * revisar recomendaciones de cualquier curso.
+ */
 async function verificarAcceso(cursoId: number) {
-  const { perfil } = await exigirRol(['docente', 'admin', 'coordinador'])
-  if (perfil.rol !== 'admin' && perfil.cursoId !== null && perfil.cursoId !== cursoId) {
+  const { perfil, alcance } = await exigirRol(['docente', 'admin', 'coordinador'])
+  if (alcance.cursoIds !== null && !alcance.cursoIds.includes(cursoId)) {
     throw new Error('Esa recomendación no pertenece a tu curso')
   }
   return perfil
