@@ -8,6 +8,7 @@ import {
   guardarMicro, crearUnidad, crearResultado,
   type EstadoCurriculo,
 } from './acciones'
+import { crearCurso, type EstadoCreacion } from '../crear/acciones'
 
 export interface Opcion {
   id: number
@@ -456,6 +457,58 @@ export function FormularioLinea({ programas }: { programas: Opcion[] }) {
 
       <Mensajes estado={estado} />
       <BotonEnvio enProgreso="Creando…">Crear línea</BotonEnvio>
+    </form>
+  )
+}
+
+/**
+ * Alta de una asignatura desde el propio modelo curricular.
+ *
+ * Meso y micro sólo permitían elegir asignaturas ya existentes; crearlas
+ * exigía ir al asistente, y el usuario lo vivió como «no puedo crear
+ * asignaturas». Reutiliza la acción del asistente: deriva la universidad
+ * del programa y crea el Grupo 1, igual que allí.
+ */
+export function FormularioAsignatura({ programas }: { programas: Opcion[] }) {
+  const [estado, accion] = useActionState<EstadoCreacion, FormData>(crearCurso, {})
+
+  if (programas.length === 0) return <Sin que="un programa" />
+
+  return (
+    <form action={accion} className="space-y-4">
+      <div>
+        <label className="block text-sm font-medium text-slate-700">Programa</label>
+        <select name="programa_id" className={CAMPO}>
+          {programas.map((p) => (
+            <option key={p.id} value={p.id}>{p.etiqueta}</option>
+          ))}
+        </select>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-[1fr_2fr]">
+        <div>
+          <label className="block text-sm font-medium text-slate-700">Código</label>
+          <input name="codigo" placeholder="se genera" className={CAMPO} />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-slate-700">Nombre</label>
+          <input name="nombre" required placeholder="Cálculo diferencial" className={CAMPO} />
+        </div>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div>
+          <label className="block text-sm font-medium text-slate-700">Semanas</label>
+          <input name="semanas" type="number" min={1} max={52} defaultValue={16} className={CAMPO} />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-slate-700">Periodo</label>
+          <input name="periodo" placeholder="2026-1" className={CAMPO} />
+        </div>
+      </div>
+
+      <Mensajes estado={estado} />
+      <BotonEnvio enProgreso="Creando…">Crear asignatura</BotonEnvio>
     </form>
   )
 }

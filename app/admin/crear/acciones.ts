@@ -44,7 +44,7 @@ async function siguienteCodigo(tabla: string, prefijo: string): Promise<string> 
 }
 
 function refrescar() {
-  for (const r of ['/admin/crear', '/admin/jerarquia', '/admin/perfiles', '/inicio']) {
+  for (const r of ['/admin/crear', '/admin/jerarquia', '/admin/curriculo', '/admin/perfiles', '/inicio']) {
     revalidatePath(r)
   }
 }

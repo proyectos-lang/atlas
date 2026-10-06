@@ -9,7 +9,7 @@ import { urlFirmada, tamanoLegible } from '@/lib/documentos/almacen'
 import {
   FormularioInstitucion, FormularioFacultad, FormularioMacro,
   FormularioArea, FormularioLinea, FormularioUbicacion,
-  FormularioMicro, FormularioUnidad, FormularioResultado,
+  FormularioMicro, FormularioUnidad, FormularioResultado, FormularioAsignatura,
   type FichaMacro, type FichaMicro,
 } from './formularios'
 import { enlazarIndicador, desenlazarIndicador } from './acciones'
@@ -127,6 +127,9 @@ export default async function PaginaCurriculo() {
 
   const opProgramas = listaProg.map((p) => ({ id: p.id, etiqueta: p.nombre }))
   const opCursos = listaCursos.map((c) => ({ id: c.id, etiqueta: c.nombre }))
+  // Crear asignaturas es de quien gestiona el programa; la acción rechaza
+  // al resto, así que a ellos no se les muestra el formulario.
+  const puedeCrearAsignatura = perfil.rol === 'admin' || perfil.rol === 'coordinador'
   const opAreas = listaAreas.map((a) => ({ id: a.id, etiqueta: a.nombre }))
 
   return (
@@ -382,6 +385,18 @@ export default async function PaginaCurriculo() {
             asignatura en el plan.
           </p>
 
+          {puedeCrearAsignatura && (
+            <details className="mb-5 rounded-lg border border-superficie-borde p-4">
+              <summary className="cursor-pointer text-sm font-semibold text-institucional">
+                + Nueva asignatura
+              </summary>
+              <p className="mb-3 mt-1 text-xs text-texto-secundario">
+                Se crea en el programa elegido con su Grupo 1, y queda disponible para ubicarla en el plan.
+              </p>
+              <FormularioAsignatura programas={opProgramas} />
+            </details>
+          )}
+
           <div className="grid gap-6 lg:grid-cols-3">
             <div>
               <h3 className="text-sm font-semibold text-slate-800">
@@ -451,6 +466,18 @@ export default async function PaginaCurriculo() {
           <p className="mb-4 mt-1 text-sm text-texto-secundario">
             La ficha de cada asignatura y sus unidades o temas.
           </p>
+
+          {puedeCrearAsignatura && (
+            <details className="mb-5 rounded-lg border border-superficie-borde p-4">
+              <summary className="cursor-pointer text-sm font-semibold text-institucional">
+                + Nueva asignatura
+              </summary>
+              <p className="mb-3 mt-1 text-xs text-texto-secundario">
+                Se crea en el programa elegido con su Grupo 1, y queda disponible para su ficha y sus unidades.
+              </p>
+              <FormularioAsignatura programas={opProgramas} />
+            </details>
+          )}
 
           <div className="grid gap-6 lg:grid-cols-2">
             <div>
