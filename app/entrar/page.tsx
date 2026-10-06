@@ -38,14 +38,22 @@ export default async function PaginaEntrar() {
           <span className="text-xl font-semibold tracking-tight text-white">ATLAS</span>
         </Link>
 
-        <div className="relative">
-          <h2 className="max-w-md text-3xl font-semibold leading-tight tracking-tight text-white">
-            Lo que un estudiante hace, traducido a lo que sabe hacer.
-          </h2>
-          {/* La ilustración presenta las cinco competencias: sustituye a la
-              lista en texto que había aquí. El ancho se ata a la altura de la
-              ventana para que no empuje el pie fuera de la pantalla. */}
-          <BienvenidaAnimada className="mt-8 w-full max-w-[min(340px,38vh)]" />
+        {/* En pantallas anchas, texto a la izquierda e ilustración alta a la
+            derecha; en las medianas, apilados, porque la columna es la mitad
+            de la ventana y el texto quedaría en una tira. El ancho de la
+            imagen se limita por alto (proporción 2:3, para no empujar el pie
+            fuera) y por ancho (para dejar sitio al texto). */}
+        <div className="relative flex flex-col gap-6 xl:flex-row xl:items-center xl:gap-10">
+          <div className="min-w-0 flex-1">
+            <h2 className="text-3xl font-semibold leading-tight tracking-tight text-white xl:text-[1.75rem] 2xl:text-4xl">
+              Lo que un estudiante hace, traducido a lo que sabe hacer.
+            </h2>
+            <p className="mt-4 text-sm leading-relaxed text-white/70">
+              Cinco competencias transversales, medidas a partir de la
+              actividad real y convertidas en acciones pedagógicas.
+            </p>
+          </div>
+          <BienvenidaAnimada className="w-[min(300px,34vh)] shrink-0 xl:w-[min(400px,48vh,24vw)]" />
         </div>
 
         <p className="relative text-xs text-white/50">
