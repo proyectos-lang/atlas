@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation'
 import { ArrowLeft, ShieldCheck } from 'lucide-react'
 import { perfilActual } from '@/lib/auth/sesion'
 import { FormularioEntrada } from './formulario'
-import { COMPETENCIAS_EXPLICADAS } from '@/lib/kpi/metodologia'
+import { BienvenidaAnimada } from '@/componentes/bienvenida-animada'
 
 export const metadata = { title: 'Entrar · ATLAS' }
 
@@ -42,14 +42,10 @@ export default async function PaginaEntrar() {
           <h2 className="max-w-md text-3xl font-semibold leading-tight tracking-tight text-white">
             Lo que un estudiante hace, traducido a lo que sabe hacer.
           </h2>
-          <ul className="mt-8 space-y-2.5">
-            {COMPETENCIAS_EXPLICADAS.map((c) => (
-              <li key={c.indice} className="flex items-center gap-2.5 text-sm text-white/75">
-                <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-white/50" aria-hidden />
-                {c.competencia}
-              </li>
-            ))}
-          </ul>
+          {/* La ilustración presenta las cinco competencias: sustituye a la
+              lista en texto que había aquí. El ancho se ata a la altura de la
+              ventana para que no empuje el pie fuera de la pantalla. */}
+          <BienvenidaAnimada className="mt-8 w-full max-w-[min(340px,38vh)]" />
         </div>
 
         <p className="relative text-xs text-white/50">
